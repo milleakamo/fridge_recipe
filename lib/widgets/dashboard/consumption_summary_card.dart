@@ -23,101 +23,139 @@ class ConsumptionSummaryCard extends StatelessWidget {
     final currencyFormat = NumberFormat.currency(locale: 'ko_KR', symbol: '₩');
     final bool isEmpty = totalSaved == 0 && consumedRatio == 0 && expiringRatio == 0 && wastedRatio == 0;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+    return Stack(
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: isEmpty ? _buildEmptyState() : Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: isEmpty ? _buildEmptyState() : Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    '이번 달 절약한 식비',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF6B7280),
-                      fontWeight: FontWeight.w500,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        '이번 달 절약한 식비',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF6B7280),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      _buildLoadingPrice(currencyFormat.format(totalSaved)),
+                    ],
+                  ),
+                  if (growthRate != 0) _buildGrowthIndicator(),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  if (consumedRatio > 0 || expiringRatio > 0 || wastedRatio > 0)
+                  SizedBox(
+                    height: 100,
+                    width: 100,
+                    child: PieChart(
+                      PieChartData(
+                        sectionsSpace: 0,
+                        centerSpaceRadius: 30,
+                        sections: [
+                          PieChartSectionData(
+                            color: const Color(0xFF34D399),
+                            value: consumedRatio,
+                            title: '',
+                            radius: 20,
+                          ),
+                          PieChartSectionData(
+                            color: const Color(0xFFFBBF24),
+                            value: expiringRatio,
+                            title: '',
+                            radius: 20,
+                          ),
+                          PieChartSectionData(
+                            color: const Color(0xFFF87171),
+                            value: wastedRatio,
+                            title: '',
+                            radius: 20,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    currencyFormat.format(totalSaved),
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1F2937),
+                  const SizedBox(width: 24),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        _buildLegendItem('소비됨', const Color(0xFF34D399), '${(consumedRatio * 100).toInt()}%'),
+                        const SizedBox(height: 8),
+                        _buildLegendItem('임박함', const Color(0xFFFBBF24), '${(expiringRatio * 100).toInt()}%'),
+                        const SizedBox(height: 8),
+                        _buildLegendItem('버려짐', const Color(0xFFF87171), '${(wastedRatio * 100).toInt()}%'),
+                      ],
                     ),
                   ),
                 ],
               ),
-              if (growthRate != 0) _buildGrowthIndicator(),
             ],
           ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              if (consumedRatio > 0 || expiringRatio > 0 || wastedRatio > 0)
-              SizedBox(
-                height: 100,
-                width: 100,
-                child: PieChart(
-                  PieChartData(
-                    sectionsSpace: 0,
-                    centerSpaceRadius: 30,
-                    sections: [
-                      PieChartSectionData(
-                        color: const Color(0xFF34D399),
-                        value: consumedRatio,
-                        title: '',
-                        radius: 20,
-                      ),
-                      PieChartSectionData(
-                        color: const Color(0xFFFBBF24),
-                        value: expiringRatio,
-                        title: '',
-                        radius: 20,
-                      ),
-                      PieChartSectionData(
-                        color: const Color(0xFFF87171),
-                        value: wastedRatio,
-                        title: '',
-                        radius: 20,
-                      ),
-                    ],
-                  ),
-                ),
+        ),
+        if (!isEmpty) Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: Container(
+            height: 3,
+            decoration: BoxDecoration(
+              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
+              gradient: LinearGradient(
+                colors: [
+                  Colors.blue.withOpacity(0.0),
+                  Colors.blue.withOpacity(0.5),
+                  Colors.blue.withOpacity(0.0),
+                ],
+                stops: const [0.0, 0.5, 1.0],
               ),
-              const SizedBox(width: 24),
-              Expanded(
-                child: Column(
-                  children: [
-                    _buildLegendItem('소비됨', const Color(0xFF34D399), '${(consumedRatio * 100).toInt()}%'),
-                    const SizedBox(height: 8),
-                    _buildLegendItem('임박함', const Color(0xFFFBBF24), '${(expiringRatio * 100).toInt()}%'),
-                    const SizedBox(height: 8),
-                    _buildLegendItem('버려짐', const Color(0xFFF87171), '${(wastedRatio * 100).toInt()}%'),
-                  ],
-                ),
-              ),
-            ],
+            ),
+          ).animate(onPlay: (controller) => controller.repeat())
+           .shimmer(duration: 2000.ms, color: Colors.blueAccent.withOpacity(0.2)),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLoadingPrice(String price) {
+    return Stack(
+      children: [
+        Text(
+          price,
+          style: const TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF1F2937),
           ),
-        ],
-      ),
+        ),
+        Positioned.fill(
+          child: Container(
+            color: Colors.white.withOpacity(0.1),
+          ).animate(onPlay: (controller) => controller.repeat())
+           .shimmer(duration: 1500.ms, color: Colors.white.withOpacity(0.8)),
+        ),
+      ],
     );
   }
 

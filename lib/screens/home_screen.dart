@@ -300,37 +300,66 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             color: Colors.blueGrey,
             onTap: () async {
               _toggleMenu();
-              // 실제 바코드 스캔 로직
+              String barcodeScanRes = await FlutterBarcodeScanner.scanBarcode(
+                  '#ff6666', 'Cancel', true, ScanMode.BARCODE);
+              if (barcodeScanRes != '-1') {
+                final Ingredient? newIngredient = await _barcodeService.lookupBarcode(barcodeScanRes);
+                if (newIngredient != null) {
+                  _ingredientBox.add(newIngredient);
+                  setState(() {});
+                }
+              }
             },
             index: 3,
           ),
           _buildMenuStep(
             icon: Icons.add_a_photo,
-            label: '영수증/사진 스캔',
+            label: '영수증 스캔',
             color: Colors.orangeAccent,
             onTap: () async {
               _toggleMenu();
-              // AI 스캔 로직
+              final List<Ingredient>? newItems = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AIScanScreen()),
+              );
+              if (newItems != null && newItems.isNotEmpty) {
+                for (var item in newItems) {
+                  _ingredientBox.add(item);
+                }
+                setState(() {});
+              }
             },
             index: 2,
           ),
           _buildMenuStep(
             icon: Icons.edit_note,
-            label: '직접 입력',
+            label: '직접 추가',
             color: const Color(0xFF3B82F6),
             onTap: () async {
               _toggleMenu();
-              // 직접 추가 로직
+              final bool? added = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ManualAddScreen()),
+              );
+              if (added == true) setState(() {});
             },
             index: 1,
           ),
           _buildMenuStep(
-            icon: Icons.auto_awesome,
-            label: 'AI 식단 추천',
+            icon: Icons.restaurant_menu,
+            label: '레시피 추천',
             color: const Color(0xFF1F2937),
             onTap: () {
               _toggleMenu();
-              // 식단 페이지 이동
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => RecipeListScreen(
+                    ingredients: _ingredientBox.values.toList(),
+                    apiKey: widget.apiKey,
+                  ),
+                ),
+              );
             },
             index: 0,
           ),

@@ -19,6 +19,7 @@ class PremiumScreen extends StatelessWidget {
         child: Column(
           children: [
             _buildHeroSection(),
+            _buildSavingSimulator(context),
             _buildNutritionAnalysis(),
             _buildPriceComparisonSection(),
             _buildFamilySyncSection(),
@@ -26,6 +27,115 @@ class PremiumScreen extends StatelessWidget {
             const SizedBox(height: 40),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSavingSimulator(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.orange.withOpacity(0.2), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.calculate, color: Colors.orange, size: 24),
+              ),
+              const SizedBox(width: 12),
+              const Text('원터치 절약 시뮬레이터', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 20),
+          const Text('냉장고 속 버려질 3,400원,\n지금 식단으로 살려보세요.', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, height: 1.4)),
+          const SizedBox(height: 24),
+          _buildSimulatorStep('Q1. 장 보실 때 보통 얼마 정도 쓰시나요?', ['3만원 미만', '3~5만원', '5~10만원', '10만원 이상']),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: ElevatedButton(
+              onPressed: () {
+                _showSavingResultDialog(context);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                elevation: 0,
+              ),
+              child: const Text('내 돈 지키기', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1);
+  }
+
+  Widget _buildSimulatorStep(String question, List<String> options) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(question, style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: options.map((option) => Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF3F4F6),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(option, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+          )).toList(),
+        ),
+      ],
+    );
+  }
+
+  void _showSavingResultDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: const Text('💡 절약 잠재력 분석', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('투자자님, 한 달에 약 45,000원을 쓰레기통에 버리고 계셨네요.', style: TextStyle(fontSize: 15, height: 1.5)),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Text('프리미엄 구독 시 연간 120만원 절약 가능', style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 13)),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('확인', style: TextStyle(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('프리미엄 혜택 보기', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange)),
+          ),
+        ],
       ),
     );
   }
