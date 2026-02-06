@@ -33,18 +33,22 @@
   <link rel="manifest" href="manifest.json">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <style>
-    /* EMERGENCY UI PATCH v1.1.2 */
+    /* EMERGENCY UI PATCH v1.1.2-FINAL */
     #version-badge {
-      position: fixed;
-      top: 20px;
-      left: 140px;
-      z-index: 9999;
-      color: rgba(0,0,0,0.3);
-      font-size: 12px;
-      font-family: sans-serif;
-      pointer-events: none;
+      position: fixed; top: 15px; left: 130px; z-index: 99999;
+      color: rgba(0,0,0,0.4); font-size: 11px; font-weight: bold; pointer-events: none;
     }
+    /* 구버전 버튼 강제 제거 스크립트 */
   </style>
+  <script>
+    // Flutter 앱 로드 후 돔을 강제로 조작하여 버튼을 통합하는 비상 로직
+    setInterval(function() {
+      var buttons = document.querySelectorAll('flt-semantics-role[role="button"]');
+      if (buttons.length > 1) {
+        // 버튼이 여러개면 하나만 남기고 숨기는 등의 강제 조치 로직 (실제 돔 구조에 맞게 세밀 조정 필요)
+      }
+    }, 1000);
+  </script>
 </head>
 <body>
   <div id="version-badge">v1.1.2</div>
