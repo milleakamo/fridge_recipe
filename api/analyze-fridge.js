@@ -46,9 +46,32 @@ export default async function handler(req, res) {
     
     let prompt = "";
     if (type === 'receipt') {
-      prompt = `Analyze receipt JSON: {store, date, items: [{name, price, quantity, category, expiry_days}]}`;
+      prompt = `Analyze receipt image and extract items in JSON format.
+      JSON structure: {
+        store: string,
+        date: string (YYYY-MM-DD),
+        items: [{
+          name: string,
+          price: number,
+          quantity: number,
+          category: string (One of: Meat, Dairy, Vegetable, Fruit, Seafood, Frozen, Processed, Beverage, Condiment, Grain),
+          is_edible: boolean (true for food items, false for trash bags, detergent, etc.),
+          expiry_days: number (estimated shelf life from purchase date)
+        }]
+      }`;
     } else {
-      prompt = `Analyze fridge JSON: {items: [{name, brand, quantity, category, confidence, expiry_days}]}`;
+      prompt = `Analyze fridge image and extract items in JSON format.
+      JSON structure: {
+        items: [{
+          name: string,
+          brand: string,
+          quantity: string,
+          category: string (One of: Meat, Dairy, Vegetable, Fruit, Seafood, Frozen, Processed, Beverage, Condiment, Grain),
+          confidence: number (0.0 to 1.0),
+          is_edible: boolean (true for food items, false for others),
+          expiry_days: number (estimated remaining shelf life)
+        }]
+      }`;
     }
 
     const response = await axios.post(

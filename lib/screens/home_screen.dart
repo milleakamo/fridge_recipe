@@ -11,6 +11,7 @@ import 'package:fridge_recipe/widgets/dashboard/consumption_summary_card.dart';
 import 'package:fridge_recipe/widgets/dashboard/consumption_timeline.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:fridge_recipe/services/barcode_service.dart';
+import 'package:fridge_recipe/services/market_service.dart';
 import 'package:fridge_recipe/widgets/dashboard/fridge_health_section.dart';
 import 'package:fridge_recipe/widgets/info_dialog.dart';
 import 'package:fridge_recipe/widgets/ingredient_card.dart';
@@ -30,6 +31,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   late Box<Ingredient> _ingredientBox;
   final BarcodeService _barcodeService = BarcodeService();
+  final MarketService _marketService = MarketService();
   final currencyFormat = NumberFormat.currency(locale: 'ko_KR', symbol: '₩');
   
   late AnimationController _animationController;
@@ -115,6 +117,78 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     setState(() {});
   }
 
+  void _showAIPrediction() async {
+    final prediction = await _marketService.predictConsumption(_ingredientBox.values.toList());
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.psychology, color: Colors.purpleAccent),
+            SizedBox(width: 8),
+            Text('AI 스마트 분석'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('냉장고 관리 점수: ${prediction['score']}점', style: const TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            Text(prediction['advice']),
+            const SizedBox(height: 12),
+            const Text('위험 식재료:', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+            Text((prediction['risky_items'] as List).join(', ')),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('확인')),
+        ],
+      ),
+    );
+  }
+
+  void _showOptimalShoppingList() async {
+    final list = await _marketService.getOptimalShoppingList(_ingredientBox.values.toList());
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('AI 최저가 쇼핑 추천', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            ...list.map((item) => ListTile(
+              leading: const Icon(Icons.shopping_bag, color: Colors.blue),
+              title: Text(item['name']),
+              subtitle: Text('${item['market']} | ${item['reason']}'),
+              trailing: Text(currencyFormat.format(item['price']), style: const TextStyle(fontWeight: FontWeight.bold)),
+              onTap: () {},
+            )).toList(),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF111827), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+                child: const Text('전체 장바구니 담기', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -143,20 +217,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         actions: [
           IconButton(
             icon: const Icon(Icons.shopping_cart_checkout, color: Colors.green),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('AI 마켓 분석: 최저가 보충 재료 리스트를 생성했습니다.'))
-              );
-            },
+            onPressed: _showOptimalShoppingList,
             tooltip: 'AI 장보기 최적화',
           ),
           IconButton(
             icon: const Icon(Icons.psychology, color: Colors.purpleAccent),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('AI 스마트 쇼핑 리스트 생성 중...'))
-              );
-            },
+            onPressed: _showAIPrediction,
             tooltip: 'AI 쇼핑 가이드',
           ),
           IconButton(
