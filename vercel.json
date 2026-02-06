@@ -1,10 +1,7 @@
 {
   "version": 2,
-  "framework": "flutter",
-  "installCommand": "flutter pub get",
-  "buildCommand": "flutter build web --release --canvas-kit",
-  "outputDirectory": "build/web",
-  "regions": ["icn1"],
+  "buildCommand": "./build.sh",
+  "outputDirectory": "public",
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/((?!api/|assets/|canvaskit/).*)", "destination": "/index.html" }

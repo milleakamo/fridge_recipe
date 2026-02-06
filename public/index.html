@@ -32,8 +32,22 @@
   <title>fridge_recipe</title>
   <link rel="manifest" href="manifest.json">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    /* EMERGENCY UI PATCH v1.1.2 */
+    #version-badge {
+      position: fixed;
+      top: 20px;
+      left: 140px;
+      z-index: 9999;
+      color: rgba(0,0,0,0.3);
+      font-size: 12px;
+      font-family: sans-serif;
+      pointer-events: none;
+    }
+  </style>
 </head>
 <body>
+  <div id="version-badge">v1.1.2</div>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

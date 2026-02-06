@@ -218,19 +218,26 @@ class _DietScreenState extends State<DietScreen> {
               Text(
                 _isPremium 
                   ? '${tomorrow['meals']['dinner']['menu']} 어떠신가요? ${tomorrow['meals']['dinner']['reason']}'
-                  : '프리미엄 회원이 되면 내일의 추천 식단을 미리 볼 수 있습니다.',
-                style: TextStyle(color: Colors.white70, fontSize: 14),
+                  : '어머니의 건강한 식탁을 위해,\n프리미엄 회원이 되어 3일치 식단을 확인하세요.',
+                style: const TextStyle(color: Colors.white70, fontSize: 14),
               ),
               const SizedBox(height: 16),
-              TextButton(
-                onPressed: () {
-                  if (!_isPremium) {
-                    _showPremiumDialog();
-                  }
-                },
-                child: Text(
-                  _isPremium ? '식단 계획 전체 보기' : '프리미엄 구독하고 전체 보기', 
-                  style: const TextStyle(color: Colors.amber)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (!_isPremium) {
+                      _showPremiumDialog();
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.amber,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: Text(
+                    _isPremium ? '식단 계획 전체 보기' : '월 1,900원으로 시작하기', 
+                    style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)
+                  ),
                 ),
               ),
             ],
@@ -241,25 +248,8 @@ class _DietScreenState extends State<DietScreen> {
             child: Container(
               margin: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(24),
-              ),
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.amber,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.lock, size: 16, color: Colors.black),
-                      SizedBox(width: 8),
-                      Text('PREMIUM ONLY', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.black)),
-                    ],
-                  ),
-                ),
               ),
             ),
           ),

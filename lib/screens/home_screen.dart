@@ -120,8 +120,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
-        title: const Text('내 냉장고', 
-          style: TextStyle(color: Color(0xFF111827), fontWeight: FontWeight.w900, fontSize: 24)),
+        title: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            const Text('내 냉장고', 
+              style: TextStyle(color: Color(0xFF111827), fontWeight: FontWeight.w900, fontSize: 24)),
+            const SizedBox(width: 8),
+            Text('v1.1.2', 
+              style: TextStyle(color: Colors.grey.withOpacity(0.5), fontSize: 12, fontWeight: FontWeight.normal)),
+          ],
+        ),
         backgroundColor: const Color(0xFFF9FAFB),
         elevation: 0,
         centerTitle: false,
