@@ -142,6 +142,7 @@ class _AIScanScreenState extends State<AIScanScreen> {
             _buildScanningOverlay(),
           if (_isScanning || _showResults)
             ..._detectedBoxes.map((rect) => _buildBoundingBox(rect)),
+          _buildScanningLine(),
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -241,6 +242,38 @@ class _AIScanScreenState extends State<AIScanScreen> {
     );
   }
 
+  Widget _buildScanningLine() {
+    if (!_isScanning) return const SizedBox.shrink();
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(seconds: 4),
+      builder: (context, value, child) {
+        final screenHeight = MediaQuery.of(context).size.height;
+        return Positioned(
+          top: value * screenHeight,
+          left: 0,
+          right: 0,
+          child: Container(
+            height: 2,
+            decoration: BoxDecoration(
+              color: const Color(0xFF0047FF).withOpacity(0.8),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF0047FF).withOpacity(0.6),
+                  blurRadius: 15,
+                  spreadRadius: 5,
+                )
+              ],
+            ),
+          ),
+        );
+      },
+      onEnd: () {
+        if (_isScanning) setState(() {});
+      },
+    );
+  }
+
   Widget _buildBoundingBox(Rect rect) {
     return Positioned(
       left: rect.left,
@@ -332,10 +365,12 @@ class _AIScanScreenState extends State<AIScanScreen> {
   }
 
   Widget _buildResultsSheet() {
+    double totalValue = _scannedItems.fold(0, (sum, item) => sum + (item.originalPrice ?? 0));
+    
     return Align(
       alignment: Alignment.bottomCenter,
       child: Container(
-        height: 500,
+        height: 550,
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
@@ -357,17 +392,15 @@ class _AIScanScreenState extends State<AIScanScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            const Text(
-              '토스(Toss) 기술로 영수증을 분석했습니다.',
-              style: TextStyle(color: Colors.grey, fontSize: 13),
-            ),
+            const SizedBox(height: 16),
+            _buildValueCard(totalValue),
             const SizedBox(height: 20),
             Expanded(
               child: ListView.builder(
                 itemCount: _scannedItems.length,
                 itemBuilder: (context, index) {
                   final item = _scannedItems[index];
+                  // API response now uses is_edible, mapped here as a heuristic or check
                   final isFood = !item.name.contains('봉투') && !item.name.contains('세제');
                   
                   return Container(
@@ -442,7 +475,7 @@ class _AIScanScreenState extends State<AIScanScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     ),
-                    child: const Text('냉장고에 넣기', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                    child: const Text('내 냉장고에 넣기', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],
@@ -451,5 +484,44 @@ class _AIScanScreenState extends State<AIScanScreen> {
         ),
       ).animate().slideY(begin: 1.0, curve: Curves.easeOutQuart),
     );
+  }
+
+  Widget _buildValueCard(double totalValue) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF2F4F7),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.account_balance_wallet, color: Color(0xFF0047FF)),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '오늘 담은 가치',
+                  style: TextStyle(fontSize: 13, color: Colors.blueGrey),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '₩${totalValue.toStringAsFixed(0)}의 식재료를 담았습니다!',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(delay: 300.ms).slideX(begin: 0.1);
   }
 }
