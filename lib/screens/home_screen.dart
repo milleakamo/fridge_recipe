@@ -27,15 +27,45 @@ class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   late Box<Ingredient> _ingredientBox;
   final BarcodeService _barcodeService = BarcodeService();
   final currencyFormat = NumberFormat.currency(locale: 'ko_KR', symbol: '₩');
+  
+  late AnimationController _animationController;
+  late Animation<double> _expandAnimation;
+  bool _isMenuOpen = false;
 
   @override
   void initState() {
     super.initState();
     _ingredientBox = Hive.box<Ingredient>('ingredients');
+    
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 250),
+    );
+    _expandAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.fastOutSlowIn,
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  void _toggleMenu() {
+    setState(() {
+      _isMenuOpen = !_isMenuOpen;
+      if (_isMenuOpen) {
+        _animationController.forward();
+      } else {
+        _animationController.reverse();
+      }
+    });
   }
 
   double get _totalSavedAmount {
@@ -246,10 +276,144 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddMenu(context),
-        backgroundColor: const Color(0xFF3B82F6),
-        child: const Icon(Icons.add, color: Colors.white, size: 32),
+      floatingActionButton: _buildFloatingMenu(),
+    );
+  }
+
+  Widget _buildFloatingMenu() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        if (_isMenuOpen) ...[
+          _buildMenuStep(
+            icon: Icons.qr_code_scanner,
+            label: '바코드 스캔',
+            color: Colors.blueGrey,
+            onTap: () async {
+              _toggleMenu();
+              String barcodeScanRes = await FlutterBarcodeScanner.scanBarcode(
+                  '#ff6666', 'Cancel', true, ScanMode.BARCODE);
+              if (barcodeScanRes != '-1') {
+                final Ingredient? newIngredient = await _barcodeService.lookupBarcode(barcodeScanRes);
+                if (newIngredient != null) {
+                  _ingredientBox.add(newIngredient);
+                  setState(() {});
+                }
+              }
+            },
+            index: 3,
+          ),
+          _buildMenuStep(
+            icon: Icons.add_a_photo,
+            label: '영수증/사진 스캔',
+            color: Colors.orangeAccent,
+            onTap: () async {
+              _toggleMenu();
+              final List<Ingredient>? newItems = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AIScanScreen()),
+              );
+              if (newItems != null && newItems.isNotEmpty) {
+                for (var item in newItems) {
+                  _ingredientBox.add(item);
+                }
+                setState(() {});
+              }
+            },
+            index: 2,
+          ),
+          _buildMenuStep(
+            icon: Icons.edit_note,
+            label: '직접 입력',
+            color: const Color(0xFF3B82F6),
+            onTap: () async {
+              _toggleMenu();
+              final bool? added = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ManualAddScreen()),
+              );
+              if (added == true) setState(() {});
+            },
+            index: 1,
+          ),
+          _buildMenuStep(
+            icon: Icons.auto_awesome,
+            label: 'AI 식단 추천',
+            color: const Color(0xFF1F2937),
+            onTap: () {
+              _toggleMenu();
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => RecipeListScreen(
+                    ingredients: _ingredientBox.values.toList(),
+                    apiKey: widget.apiKey,
+                  ),
+                ),
+              );
+            },
+            index: 0,
+          ),
+          const SizedBox(height: 16),
+        ],
+        FloatingActionButton(
+          onPressed: _toggleMenu,
+          backgroundColor: _isMenuOpen ? Colors.white : const Color(0xFF3B82F6),
+          child: AnimatedRotation(
+            turns: _isMenuOpen ? 0.125 : 0, // 45도 회전하여 X 모양으로
+            duration: const Duration(milliseconds: 250),
+            child: Icon(
+              _isMenuOpen ? Icons.add : Icons.add,
+              color: _isMenuOpen ? const Color(0xFF3B82F6) : Colors.white,
+              size: 32,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMenuStep({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+    required int index,
+  }) {
+    return FadeTransition(
+      opacity: _expandAnimation,
+      child: ScaleTransition(
+        scale: _expandAnimation,
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2)),
+                  ],
+                ),
+                child: Text(
+                  label,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF1F2937)),
+                ),
+              ),
+              const SizedBox(width: 12),
+              FloatingActionButton.small(
+                onPressed: onTap,
+                backgroundColor: color,
+                elevation: 4,
+                child: Icon(icon, color: Colors.white, size: 20),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
