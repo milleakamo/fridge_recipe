@@ -2,12 +2,13 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class VisionService {
-  static const String baseUrl = '/api/analyze-fridge';
+  static const String fridgeUrl = '/api/analyze-fridge';
+  static const String receiptUrl = '/api/analyze-receipt';
 
   static Future<Map<String, dynamic>> analyzeFridge(String base64Image) async {
     try {
       final response = await http.post(
-        Uri.parse(baseUrl),
+        Uri.parse(fridgeUrl),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'image': base64Image,
@@ -29,11 +30,10 @@ class VisionService {
   static Future<Map<String, dynamic>> analyzeReceipt(String base64Image) async {
     try {
       final response = await http.post(
-        Uri.parse(baseUrl),
+        Uri.parse(receiptUrl),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'image': base64Image,
-          'type': 'receipt',
         }),
       );
 

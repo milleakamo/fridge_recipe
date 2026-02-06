@@ -49,14 +49,16 @@ class _AIScanScreenState extends State<AIScanScreen> {
     super.dispose();
   }
 
-  Future<void> _processImage(String base64Image) async {
+  Future<void> _processImage(String base64Image, {bool isReceipt = false}) async {
     setState(() {
       _isScanning = true;
       _showResults = false;
     });
 
     try {
-      final result = await VisionService.analyzeFridge(base64Image);
+      final result = isReceipt 
+          ? await VisionService.analyzeReceipt(base64Image)
+          : await VisionService.analyzeFridge(base64Image);
 
       if (mounted) {
         setState(() {
@@ -66,11 +68,11 @@ class _AIScanScreenState extends State<AIScanScreen> {
           if (result['items'] != null) {
             _scannedItems = (result['items'] as List).map((item) {
               return Ingredient(
-                id: Uuid().v4(),
+                id: const Uuid().v4(),
                 name: item['name'] ?? '알 수 없는 재료',
                 addedDate: DateTime.now(),
-                expiryDate: DateTime.now().add(Duration(days: item['expiry_days'] ?? 7)),
-                originalPrice: item['price']?.toDouble() ?? 0.0,
+                expiryDate: DateTime.now().add(Duration(days: (item['expiry_days'] ?? 7).toInt())),
+                originalPrice: (item['price'] ?? 0.0).toDouble(),
               );
             }).toList();
           }
@@ -103,7 +105,8 @@ class _AIScanScreenState extends State<AIScanScreen> {
       final image = await _controller!.takePicture();
       final bytes = await image.readAsBytes();
       final base64Image = base64Encode(bytes);
-      await _processImage(base64Image);
+      // 단순 로직: 화면 비율이나 사용자 선택에 따라 나눌 수 있으나, 일단 영수증 모드로 자동 전환 시도 (또는 UI에서 선택 가능하게 변경)
+      await _processImage(base64Image, isReceipt: true);
     } catch (e) {
       print('Camera capture error: $e');
     }
@@ -115,7 +118,7 @@ class _AIScanScreenState extends State<AIScanScreen> {
       if (image != null) {
         final bytes = await image.readAsBytes();
         final base64Image = base64Encode(bytes);
-        await _processImage(base64Image);
+        await _processImage(base64Image, isReceipt: true);
       }
     } catch (e) {
       print('Gallery pick error: $e');
@@ -177,15 +180,18 @@ class _AIScanScreenState extends State<AIScanScreen> {
     return Container(
       width: double.infinity,
       height: double.infinity,
-      color: Colors.black.withOpacity(0.4),
+      color: Colors.black.withOpacity(0.7),
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const CircularProgressIndicator(color: Colors.white),
-            const SizedBox(height: 20),
-            const Text('AI가 식재료를 분석 중입니다...', 
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            const CircularProgressIndicator(color: Colors.blueAccent),
+            const SizedBox(height: 24),
+            const Text('AI 영수증 분석 중...', 
+              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text('토스처럼 빠르고 정확하게 데이터를 추출합니다.', 
+              style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14)),
           ],
         ),
       ),
