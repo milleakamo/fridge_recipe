@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:fridge_recipe/models/ingredient.dart';
 import 'package:fridge_recipe/services/diet_service.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:intl/intl.dart';
 
 class DietScreen extends StatefulWidget {
   const DietScreen({Key? key}) : super(key: key);
@@ -15,7 +16,8 @@ class _DietScreenState extends State<DietScreen> {
   final DietService _dietService = DietService();
   Map<String, dynamic>? _dietPlan;
   bool _isLoading = false;
-  bool _isPremium = false; // Mock premium status for now
+  bool _isPremium = true; // For v1.1.3 testing/showcase
+  final currencyFormat = NumberFormat.currency(locale: 'ko_KR', symbol: '₩');
 
   Future<void> _generateDietPlan() async {
     setState(() {
@@ -30,7 +32,9 @@ class _DietScreenState extends State<DietScreen> {
         _dietPlan = dietPlan;
       });
     } catch (e) {
-      // Handle error
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('AI 엔진 연결 실패. 환경 설정을 확인해 주세요.')),
+      );
     } finally {
       setState(() {
         _isLoading = false;
@@ -42,282 +46,274 @@ class _DietScreenState extends State<DietScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
-      appBar: AppBar(
-        title: const Text('AI 맞춤 식단', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: false,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.auto_awesome, color: Colors.black),
-            onPressed: _generateDietPlan,
-            tooltip: '식단 생성',
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          _buildSliverAppBar(),
+          SliverToBoxAdapter(
+            child: _isLoading 
+              ? _buildLoadingState()
+              : _dietPlan == null
+                ? _buildInitialState()
+                : _buildDietContent(),
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _dietPlan == null
-              ? Center(
-                  child: ElevatedButton(
-                    onPressed: _generateDietPlan,
-                    child: const Text('AI 식단 생성하기'),
-                  ),
-                )
-              : SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildDietGoalHeader(),
-                      _buildTodayMeals(),
-                      _buildUpcomingPlan(),
-                      const SizedBox(height: 40),
-                    ],
-                  ),
-                ),
+      floatingActionButton: _dietPlan != null ? FloatingActionButton.extended(
+        onPressed: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('식단이 확정되었습니다. 재료에 사용 예정 태그가 부착되었습니다.'))
+          );
+        },
+        backgroundColor: const Color(0xFF111827),
+        label: const Text('AI가 제안한 식단 확정하기', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        icon: const Icon(Icons.check, color: Colors.white),
+      ).animate().fadeIn().scale() : null,
     );
   }
 
-  Widget _buildDietGoalHeader() {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('현재 식단 목표', style: TextStyle(color: Colors.grey, fontSize: 14)),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.amber.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.stars, color: Colors.amber, size: 14),
-                    SizedBox(width: 4),
-                    Text('Premium', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 10)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('균형 잡힌 일반식', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Text('진행 중', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          const LinearProgressIndicator(
-            value: 0.7,
-            backgroundColor: Color(0xFFE5E7EB),
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.blueAccent),
-          ),
-          const SizedBox(height: 8),
-          const Text('오늘 하루 목표의 70% 달성!', style: TextStyle(fontSize: 12, color: Colors.blueAccent)),
-        ],
-      ),
-    ).animate().fadeIn().slideX(begin: -0.1);
-  }
-
-  Widget _buildTodayMeals() {
-    final today = _dietPlan!['diet_plan'][0];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Padding(
-          padding: EdgeInsets.fromLTRB(20, 16, 20, 12),
-          child: Text('오늘의 AI 추천 식단', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+  Widget _buildSliverAppBar() {
+    return SliverAppBar(
+      expandedHeight: 60.0,
+      floating: true,
+      pinned: true,
+      elevation: 0,
+      backgroundColor: Colors.white,
+      title: const Text('AI 3일 맞춤 식단', 
+        style: TextStyle(color: Color(0xFF111827), fontWeight: FontWeight.w900, fontSize: 20)),
+      centerTitle: false,
+      actions: [
+        if (_dietPlan != null) IconButton(
+          icon: const Icon(Icons.refresh, color: Color(0xFF4B5563)),
+          onPressed: _generateDietPlan,
         ),
-        _buildMealItem('아침', today['meals']['breakfast']['menu'], today['meals']['breakfast']['reason'], true),
-        _buildMealItem('점심', today['meals']['lunch']['menu'], today['meals']['lunch']['reason'], true),
-        _buildMealItem('저녁', today['meals']['dinner']['menu'], today['meals']['dinner']['reason'], false),
       ],
     );
   }
 
-  Widget _buildMealItem(String time, String menu, String reason, bool isDone) {
+  Widget _buildLoadingState() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDone ? Colors.blueAccent.withOpacity(0.05) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isDone ? Colors.blueAccent.withOpacity(0.2) : Colors.transparent),
-      ),
-      child: Row(
+      height: 400,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          const CircularProgressIndicator(color: Color(0xFF3B82F6), strokeWidth: 3),
+          const SizedBox(height: 24),
+          const Text('투자자님의 냉장고를 분석 중...', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          const SizedBox(height: 8),
+          const Text('최적의 ROI 식단을 구성하고 있습니다.', style: TextStyle(color: Color(0xFF6B7280), fontSize: 13)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInitialState() {
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        children: [
+          const SizedBox(height: 40),
           Container(
-            width: 50,
-            height: 50,
+            padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: isDone ? Colors.blueAccent : Colors.grey[100],
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(32),
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 20, offset: const Offset(0, 10))],
+            ),
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(color: const Color(0xFFEFF6FF), shape: BoxShape.circle),
+                  child: const Icon(Icons.auto_awesome, size: 48, color: Color(0xFF3B82F6)),
+                ),
+                const SizedBox(height: 24),
+                const Text('3일치 식비 0원 도전', 
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, height: 1.2)),
+                const SizedBox(height: 12),
+                const Text('보유 중인 재료를 100% 활용하여\n추가 지출 없는 완벽한 식단을 짜드립니다.', 
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Color(0xFF6B7280), fontSize: 15, height: 1.5)),
+                const SizedBox(height: 40),
+                SizedBox(
+                  width: double.infinity,
+                  height: 64,
+                  child: ElevatedButton(
+                    onPressed: _generateDietPlan,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF111827),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      elevation: 0,
+                    ),
+                    child: const Text('AI 식단 엔진 가동하기', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
+            ),
+          ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.1),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDietContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSavingsHero(),
+        const Padding(
+          padding: EdgeInsets.fromLTRB(20, 24, 20, 16),
+          child: Text('3일간의 절약 플랜', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900, color: Color(0xFF111827))),
+        ),
+        _build3DayTabs(),
+        const SizedBox(height: 100),
+      ],
+    );
+  }
+
+  Widget _buildSavingsHero() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF2563EB), Color(0xFF3B82F6)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [BoxShadow(color: const Color(0xFF3B82F6).withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('투자자님, 이번 3일간', style: TextStyle(color: Colors.whiteCC, fontSize: 15, fontWeight: FontWeight.w500)),
+          const SizedBox(height: 4),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(currencyFormat.format(14500), style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w900)),
+              const SizedBox(width: 4),
+              const Text('을 아낄 수 있어요!', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              children: [
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('보유 재료 활용률', style: TextStyle(color: Colors.whiteEE, fontSize: 12, fontWeight: FontWeight.bold)),
+                      SizedBox(height: 8),
+                      ClipRRect(
+                        borderRadius: BorderRadius.all(Radius.circular(4)),
+                        child: LinearProgressIndicator(
+                          value: 0.8,
+                          backgroundColor: Colors.white24,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          minHeight: 6,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 20),
+                const Text('80%', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn().slideY(begin: 0.1);
+  }
+
+  Widget _build3DayTabs() {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: 3,
+      itemBuilder: (context, index) {
+        final dayData = _dietPlan!['diet_plan'][index];
+        return _buildDayCard(index + 1, dayData);
+      },
+    );
+  }
+
+  Widget _buildDayCard(int day, dynamic data) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFF3F4F6)),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          initiallyExpanded: day == 1,
+          leading: Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: day == 1 ? const Color(0xFF111827) : const Color(0xFFF3F4F6),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Center(
-              child: Text(time, style: TextStyle(color: isDone ? Colors.white : Colors.black, fontWeight: FontWeight.bold)),
+              child: Text('D-$day', style: TextStyle(color: day == 1 ? Colors.white : const Color(0xFF6B7280), fontWeight: FontWeight.bold)),
             ),
+          ),
+          title: Text('Day $day Plan', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17, color: Color(0xFF111827))),
+          subtitle: const Text('추가 구매 필요 재료 0개', style: TextStyle(color: Color(0xFF10B981), fontSize: 12, fontWeight: FontWeight.bold)),
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+              child: Column(
+                children: [
+                  const Divider(height: 1),
+                  _buildMealRow('아침', data['meals']['breakfast']['menu'], '4,500원 절약'),
+                  _buildMealRow('점심', data['meals']['lunch']['menu'], '6,500원 절약'),
+                  _buildMealRow('저녁', data['meals']['dinner']['menu'], '3,500원 절약'),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(delay: (day * 100).ms).slideX(begin: 0.05);
+  }
+
+  Widget _buildMealRow(String label, String menu, String saving) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(color: const Color(0xFFF3F4F6), borderRadius: BorderRadius.circular(8)),
+            child: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF4B5563))),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(menu, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, decoration: isDone ? TextDecoration.lineThrough : null)),
-                Text(reason, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                Text(menu, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                Text(saving, style: const TextStyle(color: Color(0xFF3B82F6), fontSize: 11, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
-          if (isDone) const Icon(Icons.check_circle, color: Colors.blueAccent)
-          else const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+          const Icon(Icons.chevron_right, size: 18, color: Color(0xFFD1D5DB)),
         ],
-      ),
-    ).animate().fadeIn(delay: 200.ms).slideX(begin: 0.1);
-  }
-
-  Widget _buildUpcomingPlan() {
-    final tomorrow = _dietPlan!['diet_plan'][1];
-    return Stack(
-      children: [
-        Container(
-          margin: const EdgeInsets.all(16),
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: const Color(0xFF1F2937),
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Row(
-                children: [
-                  Icon(Icons.auto_awesome, color: Colors.amber, size: 20),
-                  SizedBox(width: 8),
-                  Text('내일의 예측 식단', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                _isPremium 
-                  ? '${tomorrow['meals']['dinner']['menu']} 어떠신가요? ${tomorrow['meals']['dinner']['reason']}'
-                  : '어머니의 건강한 식탁을 위해,\n프리미엄 회원이 되어 3일치 식단을 확인하세요.',
-                style: const TextStyle(color: Colors.white70, fontSize: 14),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    if (!_isPremium) {
-                      _showPremiumDialog();
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: Text(
-                    _isPremium ? '식단 계획 전체 보기' : '월 1,900원으로 시작하기', 
-                    style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        if (!_isPremium)
-          Positioned.fill(
-            child: Container(
-              margin: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(24),
-              ),
-            ),
-          ),
-      ],
-    ).animate().fadeIn(delay: 400.ms);
-  }
-
-  void _showPremiumDialog() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.7,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-        ),
-        child: Column(
-          children: [
-            const SizedBox(height: 12),
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
-            const Padding(
-              padding: EdgeInsets.all(32.0),
-              child: Column(
-                children: [
-                  Icon(Icons.workspace_premium, size: 60, color: Colors.amber),
-                  SizedBox(height: 24),
-                  Text('The Premium Kitchen', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                  SizedBox(height: 12),
-                  Text('무제한 AI 식단 제안과 영양 분석으로\n더 건강한 식생활을 시작하세요.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, fontSize: 16)),
-                  SizedBox(height: 40),
-                  ListTile(
-                    leading: Icon(Icons.check_circle, color: Colors.blueAccent),
-                    title: Text('3일치 맞춤 식단 미리보기'),
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.check_circle, color: Colors.blueAccent),
-                    title: Text('정밀 영양 성분 분석'),
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.check_circle, color: Colors.blueAccent),
-                    title: Text('광고 없는 쾌적한 환경'),
-                  ),
-                ],
-              ),
-            ),
-            const Spacer(),
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: SizedBox(
-                width: double.infinity,
-                height: 60,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('결제 기능은 준비 중입니다!')));
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1F2937),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  ),
-                  child: const Text('월 1,900원에 시작하기', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

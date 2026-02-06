@@ -2,8 +2,30 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:fl_chart/fl_chart.dart';
 
-class PremiumScreen extends StatelessWidget {
+class PremiumScreen extends StatefulWidget {
   const PremiumScreen({Key? key}) : super(key: key);
+
+  @override
+  State<PremiumScreen> createState() => _PremiumScreenState();
+}
+
+class _PremiumScreenState extends State<PremiumScreen> {
+  int _currentStep = 0;
+  String? _selectedBudget;
+  String? _selectedWaste;
+
+  final Map<String, int> _budgetValues = {
+    '3만원 미만': 20000,
+    '3~5만원': 40000,
+    '5~10만원': 75000,
+    '10만원 이상': 150000,
+  };
+
+  final Map<String, double> _wasteRatios = {
+    '거의 없음': 0.05,
+    '조금 있음': 0.2,
+    '절반 이상': 0.5,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +61,7 @@ class PremiumScreen extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: Colors.orange.withOpacity(0.2), width: 1),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,82 +81,123 @@ class PremiumScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          const Text('냉장고 속 버려질 3,400원,\n지금 식단으로 살려보세요.', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, height: 1.4)),
-          const SizedBox(height: 24),
-          _buildSimulatorStep('Q1. 장 보실 때 보통 얼마 정도 쓰시나요?', ['3만원 미만', '3~5만원', '5~10만원', '10만원 이상']),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            height: 56,
-            child: ElevatedButton(
-              onPressed: () {
-                _showSavingResultDialog(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                elevation: 0,
-              ),
-              child: const Text('내 돈 지키기', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          if (_currentStep == 0) ...[
+            const Text('평소 장 보실 때\n얼마나 지출하시나요?', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, height: 1.4)),
+            const SizedBox(height: 24),
+            _buildOptions(['3만원 미만', '3~5만원', '5~10만원', '10만원 이상'], (val) {
+              setState(() {
+                _selectedBudget = val;
+                _currentStep = 1;
+              });
+            }),
+          ] else if (_currentStep == 1) ...[
+            const Text('일주일 뒤,\n버려지는 재료는 어느 정도인가요?', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, height: 1.4)),
+            const SizedBox(height: 24),
+            _buildOptions(['거의 없음', '조금 있음', '절반 이상'], (val) {
+              setState(() {
+                _selectedWaste = val;
+                _currentStep = 2;
+              });
+              _showSavingResultDialog(context);
+            }),
+            TextButton(
+              onPressed: () => setState(() => _currentStep = 0),
+              child: const Text('이전으로', style: TextStyle(color: Colors.grey)),
             ),
-          ),
+          ] else ...[
+            const Text('분석이 완료되었습니다.', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            const Text('냉장고 속 숨은 돈을 찾아보세요.', style: TextStyle(color: Colors.grey)),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: OutlinedButton(
+                onPressed: () => setState(() => _currentStep = 0),
+                child: const Text('다시 계산하기'),
+              ),
+            ),
+          ],
         ],
       ),
     ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1);
   }
 
-  Widget _buildSimulatorStep(String question, List<String> options) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(question, style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: options.map((option) => Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF3F4F6),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(option, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
-          )).toList(),
+  Widget _buildOptions(List<String> options, Function(String) onSelect) {
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: options.map((option) => InkWell(
+        onTap: () => onSelect(option),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF3F4F6),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.transparent),
+          ),
+          child: Text(option, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
         ),
-      ],
+      )).toList(),
     );
   }
 
   void _showSavingResultDialog(BuildContext context) {
+    final budget = _budgetValues[_selectedBudget] ?? 0;
+    final ratio = _wasteRatios[_selectedWaste] ?? 0;
+    final monthlyWaste = (budget * ratio * 4.3).toInt();
+    final yearlySaving = (monthlyWaste * 12);
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text('💡 절약 잠재력 분석', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Row(
+          children: [
+            Icon(Icons.lightbulb, color: Colors.amber),
+            SizedBox(width: 8),
+            Text('절약 잠재력 분석', style: TextStyle(fontWeight: FontWeight.bold)),
+          ],
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('투자자님, 한 달에 약 45,000원을 쓰레기통에 버리고 계셨네요.', style: TextStyle(fontSize: 15, height: 1.5)),
+            Text('투자자님, 한 달에 약 ${NumberFormat('#,###').format(monthlyWaste)}원을\n쓰레기통에 버리고 계셨네요.', 
+              style: const TextStyle(fontSize: 15, height: 1.5)),
             const SizedBox(height: 20),
             Container(
+              width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.blue.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Text('프리미엄 구독 시 연간 120만원 절약 가능', style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 13)),
+              child: Column(
+                children: [
+                  const Text('가재 프리미엄 구독 시', style: TextStyle(fontSize: 12, color: Colors.blueAccent)),
+                  const SizedBox(height: 4),
+                  Text('연간 약 ${NumberFormat('#,###').format(yearlySaving)}원 절약 가능', 
+                    style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 16)),
+                ],
+              ),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('확인', style: TextStyle(color: Colors.grey)),
+            child: const Text('닫기', style: TextStyle(color: Colors.grey)),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('프리미엄 혜택 보기', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('프리미엄 혜택 보기'),
           ),
         ],
       ),

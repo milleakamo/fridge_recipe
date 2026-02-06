@@ -126,8 +126,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             const Text('내 냉장고', 
               style: TextStyle(color: Color(0xFF111827), fontWeight: FontWeight.w900, fontSize: 24)),
             const SizedBox(width: 8),
-            Text('v1.1.2', 
-              style: TextStyle(color: Colors.grey.withOpacity(0.5), fontSize: 12, fontWeight: FontWeight.normal)),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: const Text('v1.1.3 (Beta)', 
+                style: TextStyle(color: Colors.blue, fontSize: 10, fontWeight: FontWeight.bold)),
+            ),
           ],
         ),
         backgroundColor: const Color(0xFFF9FAFB),

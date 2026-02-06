@@ -21,8 +21,7 @@ export default async function handler(req, res) {
 
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({ 
-    model: "gemini-1.5-flash",
-    generationConfig: { responseMimeType: "application/json" }
+    model: "gemini-pro"
   });
 
   try {
@@ -86,6 +85,10 @@ export default async function handler(req, res) {
     }
   } catch (error) {
     console.error("Gemini API Error:", error);
-    return res.status(500).json({ error: 'Failed to generate diet plan' });
+    return res.status(500).json({ 
+      error: 'Failed to generate diet plan',
+      details: error.message,
+      stack: error.stack
+    });
   }
 }
