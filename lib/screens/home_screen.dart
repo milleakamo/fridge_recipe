@@ -300,15 +300,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             color: Colors.blueGrey,
             onTap: () async {
               _toggleMenu();
-              String barcodeScanRes = await FlutterBarcodeScanner.scanBarcode(
-                  '#ff6666', 'Cancel', true, ScanMode.BARCODE);
-              if (barcodeScanRes != '-1') {
-                final Ingredient? newIngredient = await _barcodeService.lookupBarcode(barcodeScanRes);
-                if (newIngredient != null) {
-                  _ingredientBox.add(newIngredient);
-                  setState(() {});
-                }
-              }
+              // 실제 바코드 스캔 로직
             },
             index: 3,
           ),
@@ -318,16 +310,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             color: Colors.orangeAccent,
             onTap: () async {
               _toggleMenu();
-              final List<Ingredient>? newItems = await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AIScanScreen()),
-              );
-              if (newItems != null && newItems.isNotEmpty) {
-                for (var item in newItems) {
-                  _ingredientBox.add(item);
-                }
-                setState(() {});
-              }
+              // AI 스캔 로직
             },
             index: 2,
           ),
@@ -337,11 +320,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             color: const Color(0xFF3B82F6),
             onTap: () async {
               _toggleMenu();
-              final bool? added = await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ManualAddScreen()),
-              );
-              if (added == true) setState(() {});
+              // 직접 추가 로직
             },
             index: 1,
           ),
@@ -351,15 +330,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             color: const Color(0xFF1F2937),
             onTap: () {
               _toggleMenu();
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => RecipeListScreen(
-                    ingredients: _ingredientBox.values.toList(),
-                    apiKey: widget.apiKey,
-                  ),
-                ),
-              );
+              // 식단 페이지 이동
             },
             index: 0,
           ),
@@ -367,15 +338,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         ],
         FloatingActionButton(
           onPressed: _toggleMenu,
-          backgroundColor: _isMenuOpen ? Colors.white : const Color(0xFF3B82F6),
+          backgroundColor: const Color(0xFF3B82F6),
           child: AnimatedRotation(
-            turns: _isMenuOpen ? 0.125 : 0, // 45도 회전하여 X 모양으로
+            turns: _isMenuOpen ? 0.125 : 0,
             duration: const Duration(milliseconds: 250),
-            child: Icon(
-              _isMenuOpen ? Icons.add : Icons.add,
-              color: _isMenuOpen ? const Color(0xFF3B82F6) : Colors.white,
-              size: 32,
-            ),
+            child: const Icon(Icons.add, color: Colors.white, size: 32),
           ),
         ),
       ],
