@@ -15,6 +15,7 @@ class _DietScreenState extends State<DietScreen> {
   final DietService _dietService = DietService();
   Map<String, dynamic>? _dietPlan;
   bool _isLoading = false;
+  bool _isPremium = false; // Mock premium status for now
 
   Future<void> _generateDietPlan() async {
     setState(() {
@@ -89,7 +90,26 @@ class _DietScreenState extends State<DietScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('현재 식단 목표', style: TextStyle(color: Colors.grey, fontSize: 14)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('현재 식단 목표', style: TextStyle(color: Colors.grey, fontSize: 14)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.stars, color: Colors.amber, size: 14),
+                    SizedBox(width: 4),
+                    Text('Premium', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 10)),
+                  ],
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -175,35 +195,140 @@ class _DietScreenState extends State<DietScreen> {
 
   Widget _buildUpcomingPlan() {
     final tomorrow = _dietPlan!['diet_plan'][1];
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1F2937),
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
+    return Stack(
+      children: [
+        Container(
+          margin: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1F2937),
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.auto_awesome, color: Colors.amber, size: 20),
-              SizedBox(width: 8),
-              Text('내일의 예측 식단', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              const Row(
+                children: [
+                  Icon(Icons.auto_awesome, color: Colors.amber, size: 20),
+                  SizedBox(width: 8),
+                  Text('내일의 예측 식단', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                _isPremium 
+                  ? '${tomorrow['meals']['dinner']['menu']} 어떠신가요? ${tomorrow['meals']['dinner']['reason']}'
+                  : '프리미엄 회원이 되면 내일의 추천 식단을 미리 볼 수 있습니다.',
+                style: TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () {
+                  if (!_isPremium) {
+                    _showPremiumDialog();
+                  }
+                },
+                child: Text(
+                  _isPremium ? '식단 계획 전체 보기' : '프리미엄 구독하고 전체 보기', 
+                  style: const TextStyle(color: Colors.amber)
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            '${tomorrow['meals']['dinner']['menu']} 어떠신가요? ${tomorrow['meals']['dinner']['reason']}',
-            style: TextStyle(color: Colors.white70, fontSize: 14),
+        ),
+        if (!_isPremium)
+          Positioned.fill(
+            child: Container(
+              margin: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.amber,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.lock, size: 16, color: Colors.black),
+                      SizedBox(width: 8),
+                      Text('PREMIUM ONLY', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.black)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
-          const SizedBox(height: 16),
-          TextButton(
-            onPressed: () {},
-            child: const Text('식단 계획 전체 보기', style: TextStyle(color: Colors.amber)),
-          ),
-        ],
-      ),
+      ],
     ).animate().fadeIn(delay: 400.ms);
+  }
+
+  void _showPremiumDialog() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+            const Padding(
+              padding: EdgeInsets.all(32.0),
+              child: Column(
+                children: [
+                  Icon(Icons.workspace_premium, size: 60, color: Colors.amber),
+                  SizedBox(height: 24),
+                  Text('The Premium Kitchen', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                  SizedBox(height: 12),
+                  Text('무제한 AI 식단 제안과 영양 분석으로\n더 건강한 식생활을 시작하세요.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, fontSize: 16)),
+                  SizedBox(height: 40),
+                  ListTile(
+                    leading: Icon(Icons.check_circle, color: Colors.blueAccent),
+                    title: Text('3일치 맞춤 식단 미리보기'),
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.check_circle, color: Colors.blueAccent),
+                    title: Text('정밀 영양 성분 분석'),
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.check_circle, color: Colors.blueAccent),
+                    title: Text('광고 없는 쾌적한 환경'),
+                  ),
+                ],
+              ),
+            ),
+            const Spacer(),
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: SizedBox(
+                width: double.infinity,
+                height: 60,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('결제 기능은 준비 중입니다!')));
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1F2937),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: const Text('월 1,900원에 시작하기', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

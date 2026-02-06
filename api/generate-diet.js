@@ -31,6 +31,7 @@ export default async function handler(req, res) {
     const prompt = `당신은 전문 영양사이자 셰프입니다. 냉장고에 남은 재료: ${ingredientList}를 사용하여 3일간의 맞춤형 식단을 작성하세요.
     - 제공된 재료의 유통기한이 임박한 것부터 우선적으로 사용하세요.
     - 각 끼니마다 추천 메뉴와 그 메뉴를 추천하는 구체적인 이유(예: "유통기한이 2일 남은 닭가슴살 소진 필요", "가벼운 시작을 위한 채소 위주 식단")를 한국어로 작성하세요.
+    - JSON 외에 어떤 텍스트도 포함하지 마세요.
     - 반드시 다음 JSON 형식을 엄격히 지켜 응답하세요:
     {
       "diet_plan": [
@@ -42,19 +43,34 @@ export default async function handler(req, res) {
             "dinner": {"menu": "메뉴명", "reason": "추천 이유"}
           }
         },
-        ... (3일차까지)
+        {
+          "day": "2일차",
+          "meals": {
+            "breakfast": {"menu": "메뉴명", "reason": "추천 이유"},
+            "lunch": {"menu": "메뉴명", "reason": "추천 이유"},
+            "dinner": {"menu": "메뉴명", "reason": "추천 이유"}
+          }
+        },
+        {
+          "day": "3일차",
+          "meals": {
+            "breakfast": {"menu": "메뉴명", "reason": "추천 이유"},
+            "lunch": {"menu": "메뉴명", "reason": "추천 이유"},
+            "dinner": {"menu": "메뉴명", "reason": "추천 이유"}
+          }
+        }
       ]
     }`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    let text = response.text();
+    let text = response.text().trim();
 
-    const jsonRegex = /\{[\s\S]*\}/;
-    const match = text.match(jsonRegex);
-    
-    if (match) {
-      text = match[0];
+    // Remove markdown code blocks if present
+    if (text.startsWith('```json')) {
+      text = text.replace(/^```json/, '').replace(/```$/, '').trim();
+    } else if (text.startsWith('```')) {
+      text = text.replace(/^```/, '').replace(/```$/, '').trim();
     }
 
     try {

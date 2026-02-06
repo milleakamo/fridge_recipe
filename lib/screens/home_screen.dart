@@ -5,6 +5,7 @@ import 'package:fridge_recipe/screens/ai_scan_screen.dart';
 import 'package:fridge_recipe/screens/recipe_list_screen.dart';
 import 'package:fridge_recipe/screens/ingredient_list_screen.dart';
 import 'package:fridge_recipe/screens/manual_add_screen.dart';
+import 'package:fridge_recipe/screens/premium_screen.dart';
 import 'package:fridge_recipe/widgets/add_ingredient_dialog.dart';
 import 'package:fridge_recipe/widgets/dashboard/consumption_summary_card.dart';
 import 'package:fridge_recipe/widgets/dashboard/consumption_timeline.dart';
@@ -103,6 +104,16 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             icon: const Icon(Icons.refresh_outlined, color: Color(0xFF4B5563)),
             onPressed: () => setState(() {}),
+          ),
+          IconButton(
+            icon: const Icon(Icons.workspace_premium, color: Color(0xFFFBBF24)),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const PremiumScreen()),
+              );
+            },
+            tooltip: '프리미엄 혜택',
           ),
           const SizedBox(width: 8),
         ],
