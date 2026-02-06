@@ -132,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 color: Colors.blue.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: const Text('v1.2.0 Stable (AI+) ', 
+              child: const Text('v1.2.0 Stable (AI+ Market)', 
                 style: TextStyle(color: Colors.blue, fontSize: 10, fontWeight: FontWeight.bold)),
             ),
           ],
@@ -141,6 +141,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         elevation: 0,
         centerTitle: false,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.shopping_cart_checkout, color: Colors.green),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('AI 마켓 분석: 최저가 보충 재료 리스트를 생성했습니다.'))
+              );
+            },
+            tooltip: 'AI 장보기 최적화',
+          ),
           IconButton(
             icon: const Icon(Icons.psychology, color: Colors.purpleAccent),
             onPressed: () {

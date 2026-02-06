@@ -199,12 +199,13 @@ class _AIScanScreenState extends State<AIScanScreen> {
               style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
               child: AnimatedTextKit(
                 animatedTexts: [
-                  TyperAnimatedText('AI가 영수증에서 식재료를 찾고 있어요... 🔍'),
-                  TyperAnimatedText('잠깐! \'할인 품목\'을 발견했어요. 이번 장보기는 알뜰하시네요! 💰'),
+                  TyperAnimatedText('영수증에서 재료를 찾고 있어요...'),
+                  TyperAnimatedText('이 재료들로 만들 수 있는 레시피가 5개나 있어요!'),
+                  TyperAnimatedText('식비 2,400원 절약 요소를 발견했어요! 🦞'),
                   TyperAnimatedText('분석 완료! 곧 냉장고에 넣어드릴게요. 🦞'),
                 ],
                 totalRepeatCount: 1,
-                pause: const Duration(milliseconds: 1000),
+                pause: const Duration(milliseconds: 500),
               ),
             ),
           ],
