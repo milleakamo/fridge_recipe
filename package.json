@@ -1,0 +1,12 @@
+{
+  "name": "fridge-recipe-backend",
+  "version": "1.0.8",
+  "private": true,
+  "scripts": {
+    "build": "mkdir -p public && cp -r build/web/* public/ && cp -r api public/ && cp public/vercel.json ."
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "axios": "^1.6.7"
+  }
+}
