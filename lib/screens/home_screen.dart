@@ -132,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 color: Colors.blue.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: const Text('v1.1.3 (Beta)', 
+              child: const Text('v1.2.0 Stable', 
                 style: TextStyle(color: Colors.blue, fontSize: 10, fontWeight: FontWeight.bold)),
             ),
           ],
@@ -141,6 +141,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         elevation: 0,
         centerTitle: false,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.auto_graph, color: Colors.blue),
+            onPressed: () {},
+            tooltip: 'AI 소비 예측 활성화됨',
+          ),
           IconButton(
             icon: const Icon(Icons.playlist_add, color: Color(0xFF4B5563)),
             onPressed: _addSampleData,
@@ -179,6 +184,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           final expiringRatio = totalCount > 0 ? nearExpiryItems.length / totalCount : 0.0;
           final wastedItems = items.where((i) => i.expiryDate.isBefore(DateTime.now())).toList();
           final wastedRatio = totalCount > 0 ? wastedItems.length / totalCount : 0.0;
+
+          final totalValueAtRisk = nearExpiryItems.fold(0.0, (sum, i) => sum + i.originalPrice);
 
           // 성장률 계산 (이번 주 vs 지난 주 - addedDate 기준)
           final now = DateTime.now();
@@ -232,6 +239,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 FridgeHealthSection(
                   score: _fridgeHealthScore,
                   nearExpiryItems: nearExpiryItems,
+                  totalValueAtRisk: totalValueAtRisk,
                 ).animate().fadeIn(duration: 600.ms, delay: 200.ms).slideY(begin: 0.1),
 
                 const SizedBox(height: 32),

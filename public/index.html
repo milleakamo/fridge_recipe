@@ -32,32 +32,8 @@
   <title>fridge_recipe</title>
   <link rel="manifest" href="manifest.json">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <style>
-    /* EMERGENCY UI PATCH v1.1.2-FINAL */
-    #version-badge {
-      position: fixed; top: 15px; left: 130px; z-index: 99999;
-      color: rgba(0,0,0,0.4); font-size: 11px; font-weight: bold; pointer-events: none;
-    }
-    /* 구버전 버튼 강제 제거 스크립트 */
-  </style>
-  <script>
-    // 9단계 루틴 통과를 위한 강제 버튼 통합 스크립트
-    setInterval(function() {
-      // Flutter Web의 특정 구조(aria-label 등)를 이용해 구버전 버튼들을 찾아 숨김 처리
-      var elements = document.querySelectorAll('[aria-label]');
-      elements.forEach(function(el) {
-        var label = el.getAttribute('aria-label');
-        if (label === '레시피 추천' || label === '바코드' || label === '사진 스캔' || label === '직접 추가') {
-          el.style.display = 'none';
-          el.style.visibility = 'hidden';
-          el.style.opacity = '0';
-        }
-      });
-    }, 500);
-  </script>
 </head>
 <body>
-  <div id="version-badge">v1.1.2</div>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

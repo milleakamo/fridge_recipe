@@ -5,15 +5,18 @@ import 'package:intl/intl.dart';
 class FridgeHealthSection extends StatelessWidget {
   final double score;
   final List<Ingredient> nearExpiryItems;
+  final double totalValueAtRisk;
 
   const FridgeHealthSection({
     Key? key,
     required this.score,
     required this.nearExpiryItems,
+    this.totalValueAtRisk = 0.0,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final currencyFormat = NumberFormat.currency(locale: 'ko_KR', symbol: '₩');
     Color scoreColor = const Color(0xFF34D399);
     if (score < 70) scoreColor = const Color(0xFFFBBF24);
     if (score < 40) scoreColor = const Color(0xFFF87171);
@@ -51,6 +54,13 @@ class FridgeHealthSection extends StatelessWidget {
                       _getHealthStatus(score),
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF111827)),
                     ),
+                    if (totalValueAtRisk > 0) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        '약 ${currencyFormat.format(totalValueAtRisk)} 소멸 위기',
+                        style: const TextStyle(color: Color(0xFFEF4444), fontSize: 13, fontWeight: FontWeight.bold),
+                      ),
+                    ],
                     const SizedBox(height: 4),
                     Text(
                       _getHealthMessage(score),

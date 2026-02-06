@@ -189,7 +189,7 @@ class _DietScreenState extends State<DietScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('투자자님, 이번 3일간', style: TextStyle(color: Colors.whiteCC, fontSize: 15, fontWeight: FontWeight.w500)),
+          const Text('투자자님, 이번 3일간', style: TextStyle(color: Color(0xCCFFFFFF), fontSize: 15, fontWeight: FontWeight.w500)),
           const SizedBox(height: 4),
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -213,7 +213,7 @@ class _DietScreenState extends State<DietScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('보유 재료 활용률', style: TextStyle(color: Colors.whiteEE, fontSize: 12, fontWeight: FontWeight.bold)),
+                      Text('보유 재료 활용률', style: TextStyle(color: Color(0xEEFFFFFF), fontSize: 12, fontWeight: FontWeight.bold)),
                       SizedBox(height: 8),
                       ClipRRect(
                         borderRadius: BorderRadius.all(Radius.circular(4)),
