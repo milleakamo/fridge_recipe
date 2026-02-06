@@ -1,16 +1,11 @@
 {
   "version": 2,
-  "outputDirectory": "public",
+  "framework": "flutter",
+  "installCommand": "flutter pub get",
+  "buildCommand": "flutter build web --release",
+  "outputDirectory": "build/web",
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/((?!api/|assets/|canvaskit/).*)", "destination": "/index.html" }
-  ],
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
-      ]
-    }
   ]
 }
