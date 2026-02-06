@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter_confetti/flutter_confetti.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:fridge_recipe/models/ingredient.dart';
@@ -105,7 +106,6 @@ class _AIScanScreenState extends State<AIScanScreen> {
       final image = await _controller!.takePicture();
       final bytes = await image.readAsBytes();
       final base64Image = base64Encode(bytes);
-      // 단순 로직: 화면 비율이나 사용자 선택에 따라 나눌 수 있으나, 일단 영수증 모드로 자동 전환 시도 (또는 UI에서 선택 가능하게 변경)
       await _processImage(base64Image, isReceipt: true);
     } catch (e) {
       print('Camera capture error: $e');
@@ -135,20 +135,13 @@ class _AIScanScreenState extends State<AIScanScreen> {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // 카메라 프리뷰
           Center(
             child: CameraPreview(_controller!),
           ),
-
-          // 스캐닝 오버레이
           if (_isScanning)
             _buildScanningOverlay(),
-
-          // 인식된 바운딩 박스
           if (_isScanning || _showResults)
             ..._detectedBoxes.map((rect) => _buildBoundingBox(rect)),
-
-          // 상단 가이드
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -160,7 +153,7 @@ class _AIScanScreenState extends State<AIScanScreen> {
                     onPressed: () => Navigator.pop(context),
                   ),
                   const Text(
-                    'AI 재료 스캔',
+                    'AI 영수증 스캔',
                     style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(width: 48),
@@ -168,8 +161,6 @@ class _AIScanScreenState extends State<AIScanScreen> {
               ),
             ),
           ),
-
-          // 하단 버튼 또는 결과 리스트
           _showResults ? _buildResultsSheet() : _buildScanButton(),
         ],
       ),
@@ -185,17 +176,68 @@ class _AIScanScreenState extends State<AIScanScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const CircularProgressIndicator(color: Colors.blueAccent),
-            const SizedBox(height: 24),
-            const Text('AI 영수증 분석 중...', 
-              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Text('토스처럼 빠르고 정확하게 데이터를 추출합니다.', 
-              style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14)),
+            Container(
+              width: 150,
+              height: 200,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFF0047FF), width: 2),
+              ),
+              child: Stack(
+                children: [
+                  const Positioned.fill(
+                    child: Icon(Icons.receipt_long, color: Colors.white54, size: 80),
+                  ),
+                  _buildScanningBar(),
+                ],
+              ),
+            ).animate(onPlay: (controller) => controller.repeat())
+             .shimmer(duration: 2.seconds, color: const Color(0xFF0047FF).withOpacity(0.3)),
+            const SizedBox(height: 40),
+            DefaultTextStyle(
+              style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              child: AnimatedTextKit(
+                animatedTexts: [
+                  TyperAnimatedText('AI가 영수증에서 식재료를 찾고 있어요... 🔍'),
+                  TyperAnimatedText('잠깐! \'할인 품목\'을 발견했어요. 이번 장보기는 알뜰하시네요! 💰'),
+                  TyperAnimatedText('분석 완료! 곧 냉장고에 넣어드릴게요. 🦞'),
+                ],
+                totalRepeatCount: 1,
+                pause: const Duration(milliseconds: 1000),
+              ),
+            ),
           ],
         ),
       ),
     ).animate().fadeIn();
+  }
+
+  Widget _buildScanningBar() {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(seconds: 2),
+      builder: (context, value, child) {
+        return Positioned(
+          top: value * 200,
+          left: 0,
+          right: 0,
+          child: Container(
+            height: 4,
+            decoration: BoxDecoration(
+              color: const Color(0xFF0047FF),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF0047FF).withOpacity(0.5),
+                  blurRadius: 10,
+                  spreadRadius: 2,
+                )
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Widget _buildBoundingBox(Rect rect) {
@@ -206,9 +248,9 @@ class _AIScanScreenState extends State<AIScanScreen> {
       height: rect.height,
       child: Container(
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.blueAccent, width: 2),
+          border: Border.all(color: const Color(0xFF0047FF), width: 2),
           borderRadius: BorderRadius.circular(8),
-          color: Colors.blueAccent.withOpacity(0.1),
+          color: const Color(0xFF0047FF).withOpacity(0.1),
         ),
       ).animate(onPlay: (controller) => controller.repeat())
        .shimmer(duration: 1500.ms, color: Colors.white.withOpacity(0.5)),
@@ -218,36 +260,41 @@ class _AIScanScreenState extends State<AIScanScreen> {
   Widget _buildScanButton() {
     return Align(
       alignment: Alignment.bottomCenter,
-      child: Padding(
+      child: Container(
         padding: const EdgeInsets.only(bottom: 50.0),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
+          ),
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text(
               '영수증이나 냉장고 안을 비춰주세요',
-              style: TextStyle(color: Colors.white, fontSize: 16),
+              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 30),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // 갤러리 버튼
-                IconButton(
+                _buildCircularButton(
                   onPressed: _isScanning ? null : _pickFromGallery,
-                  icon: const Icon(Icons.photo_library, color: Colors.white, size: 40),
+                  icon: Icons.photo_library,
                 ),
-                const SizedBox(width: 40),
-                // 촬영 버튼
+                const SizedBox(width: 32),
                 GestureDetector(
                   onTap: _isScanning ? null : _startScan,
                   child: Container(
-                    width: 80,
-                    height: 80,
+                    width: 84,
+                    height: 84,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white, width: 4),
                     ),
-                    padding: const EdgeInsets.all(4),
+                    padding: const EdgeInsets.all(6),
                     child: Container(
                       decoration: const BoxDecoration(
                         color: Colors.white,
@@ -256,11 +303,10 @@ class _AIScanScreenState extends State<AIScanScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 40),
-                // 라이트 버튼 (추후 구현)
-                const IconButton(
+                const SizedBox(width: 32),
+                _buildCircularButton(
                   onPressed: null,
-                  icon: Icon(Icons.flash_on, color: Colors.white, size: 40),
+                  icon: Icons.flash_on,
                 ),
               ],
             ),
@@ -270,11 +316,25 @@ class _AIScanScreenState extends State<AIScanScreen> {
     );
   }
 
+  Widget _buildCircularButton({required VoidCallback? onPressed, required IconData icon}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        shape: BoxShape.circle,
+      ),
+      child: IconButton(
+        onPressed: onPressed,
+        icon: Icon(icon, color: Colors.white, size: 28),
+        padding: const EdgeInsets.all(12),
+      ),
+    );
+  }
+
   Widget _buildResultsSheet() {
     return Align(
       alignment: Alignment.bottomCenter,
       child: Container(
-        height: 450,
+        height: 500,
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
@@ -291,10 +351,15 @@ class _AIScanScreenState extends State<AIScanScreen> {
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  '${_scannedItems.length}개 발견',
-                  style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold),
+                  '${_scannedItems.length}개 분석됨',
+                  style: const TextStyle(color: Color(0xFF0047FF), fontWeight: FontWeight.bold),
                 ),
               ],
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              '토스(Toss) 기술로 영수증을 분석했습니다.',
+              style: TextStyle(color: Colors.grey, fontSize: 13),
             ),
             const SizedBox(height: 20),
             Expanded(
@@ -302,19 +367,50 @@ class _AIScanScreenState extends State<AIScanScreen> {
                 itemCount: _scannedItems.length,
                 itemBuilder: (context, index) {
                   final item = _scannedItems[index];
-                  return ListTile(
-                    leading: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[100],
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(Icons.restaurant, color: Colors.blueGrey),
+                  final isFood = !item.name.contains('봉투') && !item.name.contains('세제');
+                  
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: isFood ? Colors.white : Colors.grey[50],
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: isFood ? Colors.grey[200]! : Colors.transparent),
                     ),
-                    title: Text(item.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text('유통기한: ${item.expiryDate.toString().split(' ')[0]} (자동 계산됨)'),
-                    trailing: const Icon(Icons.check_circle, color: Colors.green),
-                  ).animate().slideX(begin: 1.0, delay: (index * 100).ms);
+                    child: ListTile(
+                      leading: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: isFood ? const Color(0xFF0047FF).withOpacity(0.05) : Colors.grey[200],
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          isFood ? Icons.restaurant : Icons.category_outlined,
+                          color: isFood ? const Color(0xFF0047FF) : Colors.grey,
+                          size: 20,
+                        ),
+                      ),
+                      title: Text(
+                        item.name,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: isFood ? Colors.black : Colors.grey,
+                          decoration: isFood ? null : TextDecoration.lineThrough,
+                        ),
+                      ),
+                      subtitle: Text(
+                        isFood 
+                          ? '유통기한 약 ${item.expiryDate.difference(DateTime.now()).inDays}일 남음'
+                          : '식재료가 아닌 품목 (제외됨)',
+                        style: TextStyle(fontSize: 12, color: isFood ? Colors.blueGrey : Colors.grey),
+                      ),
+                      trailing: Checkbox(
+                        value: isFood,
+                        onChanged: (val) {},
+                        activeColor: const Color(0xFF0047FF),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                      ),
+                    ),
+                  ).animate().slideX(begin: 1.0, delay: (index * 50).ms, curve: Curves.easeOutQuart);
                 },
               ),
             ),
@@ -322,13 +418,14 @@ class _AIScanScreenState extends State<AIScanScreen> {
             Row(
               children: [
                 Expanded(
-                  child: OutlinedButton(
+                  child: TextButton(
                     onPressed: () => setState(() => _showResults = false),
-                    style: OutlinedButton.styleFrom(
+                    style: TextButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: Colors.grey[100],
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     ),
-                    child: const Text('다시 찍기'),
+                    child: const Text('다시 찍기', style: TextStyle(color: Colors.black)),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -338,19 +435,20 @@ class _AIScanScreenState extends State<AIScanScreen> {
                       Navigator.pop(context, _scannedItems);
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blueAccent,
+                      backgroundColor: const Color(0xFF0047FF),
                       foregroundColor: Colors.white,
+                      elevation: 0,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     ),
-                    child: const Text('냉장고에 넣기', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    child: const Text('냉장고에 넣기', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],
             ),
           ],
         ),
-      ).animate().slideY(begin: 1.0),
+      ).animate().slideY(begin: 1.0, curve: Curves.easeOutQuart),
     );
   }
 }

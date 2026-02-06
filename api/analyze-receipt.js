@@ -54,14 +54,20 @@ export default async function handler(req, res) {
           "name": "Refined Item Name (e.g., 'Chicken Breast' instead of 'KR_CHICK_BR')",
           "price": 12000,
           "quantity": 1,
-          "category": "One of: Meat, Dairy, Vegetable, Fruit, Seafood, Frozen, Processed, Beverage, Condiment, Grain",
-          "expiry_days": 0
+          "category": "One of: Meat, Dairy, Vegetable, Fruit, Seafood, Frozen, Processed, Beverage, Condiment, Grain, Other",
+          "expiry_days": 0,
+          "is_food": true
         }
       ],
       "total_price": 54000
     }
-    Only include food items that should be stored in a fridge or pantry. Ignore non-food items like detergents or paper towels.
-    If expiry_days is unknown, set it based on the category (e.g., Meat: 3, Dairy: 10, Vegetable: 7).`;
+    Identify all items on the receipt.
+    For each item:
+    1. Determine if it is a food item (edible, ingredients, snacks, etc.). Set "is_food": true for these.
+    2. For non-food items (detergents, paper towels, trash bags, electronics, etc.), set "is_food": false and "category": "Other".
+    3. Refine the item name to be human-readable.
+    4. Provide the price and quantity.
+    5. If is_food is true, set the category and estimate expiry_days (Meat: 3, Dairy: 10, Vegetable: 7, etc.).`;
 
     const response = await axios.post(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,

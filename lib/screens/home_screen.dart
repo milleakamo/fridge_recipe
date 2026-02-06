@@ -132,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 color: Colors.blue.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: const Text('v1.2.0 Stable', 
+              child: const Text('v1.2.0 Stable (AI+) ', 
                 style: TextStyle(color: Colors.blue, fontSize: 10, fontWeight: FontWeight.bold)),
             ),
           ],
@@ -141,6 +141,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         elevation: 0,
         centerTitle: false,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.psychology, color: Colors.purpleAccent),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('AI 스마트 쇼핑 리스트 생성 중...'))
+              );
+            },
+            tooltip: 'AI 쇼핑 가이드',
+          ),
           IconButton(
             icon: const Icon(Icons.auto_graph, color: Colors.blue),
             onPressed: () {},

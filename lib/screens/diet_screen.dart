@@ -195,7 +195,7 @@ class _DietScreenState extends State<DietScreen> {
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
-              Text(currencyFormat.format(14500), style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w900)),
+              Text(currencyFormat.format(21800), style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w900)),
               const SizedBox(width: 4),
               const Text('을 아낄 수 있어요!', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
             ],
@@ -213,12 +213,12 @@ class _DietScreenState extends State<DietScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('보유 재료 활용률', style: TextStyle(color: Color(0xEEFFFFFF), fontSize: 12, fontWeight: FontWeight.bold)),
+                      Text('냉장고 파먹기 성공률 (AI 예측)', style: TextStyle(color: Color(0xEEFFFFFF), fontSize: 12, fontWeight: FontWeight.bold)),
                       SizedBox(height: 8),
                       ClipRRect(
                         borderRadius: BorderRadius.all(Radius.circular(4)),
                         child: LinearProgressIndicator(
-                          value: 0.8,
+                          value: 0.92,
                           backgroundColor: Colors.white24,
                           valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                           minHeight: 6,
@@ -228,7 +228,7 @@ class _DietScreenState extends State<DietScreen> {
                   ),
                 ),
                 const SizedBox(width: 20),
-                const Text('80%', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900)),
+                const Text('92%', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900)),
               ],
             ),
           ),
@@ -255,7 +255,7 @@ class _DietScreenState extends State<DietScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFF3F4F6)),
+        border: Border.all(color: day == 1 ? const Color(0xFF3B82F6).withOpacity(0.3) : const Color(0xFFF3F4F6), width: day == 1 ? 2 : 1),
       ),
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -265,15 +265,15 @@ class _DietScreenState extends State<DietScreen> {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: day == 1 ? const Color(0xFF111827) : const Color(0xFFF3F4F6),
+              color: day == 1 ? const Color(0xFF3B82F6) : const Color(0xFFF3F4F6),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Center(
               child: Text('D-$day', style: TextStyle(color: day == 1 ? Colors.white : const Color(0xFF6B7280), fontWeight: FontWeight.bold)),
             ),
           ),
-          title: Text('Day $day Plan', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17, color: Color(0xFF111827))),
-          subtitle: const Text('추가 구매 필요 재료 0개', style: TextStyle(color: Color(0xFF10B981), fontSize: 12, fontWeight: FontWeight.bold)),
+          title: Text('Day $day - ${day == 1 ? "최적 효율 식단" : "잔여 재료 활용"}', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17, color: Color(0xFF111827))),
+          subtitle: Text(day == 1 ? '버려질 뻔한 식재료 3종 포함' : '추가 구매 필요 재료 0개', style: TextStyle(color: day == 1 ? Colors.orange : const Color(0xFF10B981), fontSize: 12, fontWeight: FontWeight.bold)),
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
@@ -281,8 +281,8 @@ class _DietScreenState extends State<DietScreen> {
                 children: [
                   const Divider(height: 1),
                   _buildMealRow('아침', data['meals']['breakfast']['menu'], '4,500원 절약'),
-                  _buildMealRow('점심', data['meals']['lunch']['menu'], '6,500원 절약'),
-                  _buildMealRow('저녁', data['meals']['dinner']['menu'], '3,500원 절약'),
+                  _buildMealRow('점심', data['meals']['lunch']['menu'], '8,800원 절약'),
+                  _buildMealRow('저녁', data['meals']['dinner']['menu'], '8,500원 절약'),
                 ],
               ),
             ),
