@@ -281,21 +281,46 @@ class _PremiumScreenState extends State<PremiumScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('실시간 최저가 장바구니', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              Icon(Icons.shopping_cart_outlined, color: Colors.orange),
+              const Text('AI 스마트 최저가 연동', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text('NEW', style: TextStyle(color: Colors.red, fontSize: 10, fontWeight: FontWeight.bold)),
+              ),
             ],
           ),
           const SizedBox(height: 16),
-          _buildPriceItem('유기농 대란 15구', '쿠팡', '₩4,980', true),
-          _buildPriceItem('서울우유 1L', '이마트', '₩2,850', false),
-          _buildPriceItem('국산 흙대파', '마켓컬리', '₩2,100', true),
+          const Text('부족한 재료를 한 번의 터치로 가장 저렴한 마켓에서 주문하세요.', style: TextStyle(color: Colors.grey, fontSize: 13)),
+          const SizedBox(height: 20),
+          _buildPriceItem('유기농 대란 15구', '쿠팡 (로켓배송)', '₩4,980', true),
+          _buildPriceItem('서울우유 1L', '이마트 (쓱배송)', '₩2,850', false),
+          _buildPriceItem('국산 흙대파', '마켓컬리 (샛별배송)', '₩2,100', true),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {},
+              icon: const Icon(Icons.shopping_cart, size: 18),
+              label: const Text('최저가 장바구니 일괄 결제'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFF3F4F6),
+                foregroundColor: Colors.black87,
+                elevation: 0,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ),
         ],
       ),
     ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.1);

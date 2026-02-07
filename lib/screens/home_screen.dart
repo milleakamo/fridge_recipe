@@ -270,7 +270,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 color: Colors.blue.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: const Text('v1.2.0 (AI Vision Sync)', 
+              child: const Text('v1.2.4 Stable (AI Vision Complete)', 
                 style: TextStyle(color: Colors.blue, fontSize: 10, fontWeight: FontWeight.bold)),
             ),
           ],
