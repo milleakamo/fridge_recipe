@@ -22,6 +22,9 @@ class Ingredient extends HiveObject {
   @HiveField(5)
   bool isConsumed;
 
+  @HiveField(6)
+  final bool isFood;
+
   Ingredient({
     required this.id,
     required this.name,
@@ -29,6 +32,7 @@ class Ingredient extends HiveObject {
     required this.expiryDate,
     this.originalPrice = 0.0,
     this.isConsumed = false,
+    this.isFood = true,
   });
 
   Map<String, dynamic> toJson() => {
@@ -38,6 +42,7 @@ class Ingredient extends HiveObject {
     'expiryDate': expiryDate.toIso8601String(),
     'originalPrice': originalPrice,
     'isConsumed': isConsumed,
+    'isFood': isFood,
   };
 
   bool get isNearExpiry {

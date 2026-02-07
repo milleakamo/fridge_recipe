@@ -56,7 +56,7 @@ export default async function handler(req, res) {
           "quantity": 1,
           "category": "One of: Meat, Dairy, Vegetable, Fruit, Seafood, Frozen, Processed, Beverage, Condiment, Grain, Other",
           "expiry_days": 0,
-          "is_edible": true,
+          "is_food": true,
           "brand": "Brand name if available",
           "unit_price": 12000
         }
@@ -65,12 +65,12 @@ export default async function handler(req, res) {
     }
     Identify all items on the receipt.
     For each item:
-    1. Determine if it is a food item (edible, ingredients, snacks, etc.). Set "is_edible": true for these.
-    2. For non-food items (detergents, paper towels, trash bags, electronics, soap, shampoo, battery, plastic bags, etc.), set "is_edible": false and "category": "Other".
+    1. Determine if it is a food item (edible, ingredients, snacks, etc.). Set "is_food": true for these.
+    2. For non-food items (detergents, paper towels, trash bags, electronics, soap, shampoo, battery, plastic bags, etc.), set "is_food": false and "category": "Other".
     3. Refine the item name to be human-readable and standard.
     4. Provide the price and quantity. If quantity > 1, unit_price should be price / quantity.
     5. Ensure "price" matches "unit_price * quantity" as a validation step.
-    6. If is_edible is true, set the category and estimate expiry_days (Meat: 3, Dairy: 10, Vegetable: 7, etc.).
+    6. If is_food is true, set the category and estimate expiry_days (Meat: 3, Dairy: 10, Vegetable: 7, etc.).
     7. Ignore point balances, payment methods, and non-item entries.`;
 
     const response = await axios.post(

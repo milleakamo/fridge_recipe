@@ -151,10 +151,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   void _showOptimalShoppingList() async {
     final list = await _marketService.getOptimalShoppingList(_ingredientBox.values.toList());
+    final insights = await _marketService.getMarketInsights();
+    
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.75,
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
@@ -162,25 +166,85 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('AI 최저가 쇼핑 추천', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('AI 최저가 쇼핑 추천', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
+              ],
+            ),
             const SizedBox(height: 16),
-            ...list.map((item) => ListTile(
-              leading: const Icon(Icons.shopping_bag, color: Colors.blue),
-              title: Text(item['name']),
-              subtitle: Text('${item['market']} | ${item['reason']}'),
-              trailing: Text(currencyFormat.format(item['price']), style: const TextStyle(fontWeight: FontWeight.bold)),
-              onTap: () {},
-            )).toList(),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.red.withOpacity(0.1)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.trending_up, color: Colors.red),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text(insights['inflation_alert'], style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w600, fontSize: 13))),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            Expanded(
+              child: ListView.builder(
+                itemCount: list.length,
+                itemBuilder: (context, index) {
+                  final item = list[index];
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF9FAFB),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      leading: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                        child: const Icon(Icons.shopping_cart, color: Color(0xFF3B82F6)),
+                      ),
+                      title: Text(item['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('${item['market']} | ${item['reason']}', style: const TextStyle(fontSize: 12)),
+                          if (item['isLowest']) 
+                            Container(
+                              margin: const EdgeInsets.only(top: 4),
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(color: Colors.green, borderRadius: BorderRadius.circular(4)),
+                              child: const Text('최저가 보장', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)),
+                            ),
+                        ],
+                      ),
+                      trailing: Text(currencyFormat.format(item['price']), style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF111827))),
+                      onTap: () {},
+                    ),
+                  );
+                },
+              ),
+            ),
             const SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
-              height: 56,
+              height: 60,
               child: ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF111827), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
-                child: const Text('전체 장바구니 담기', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                onPressed: () {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('장바구니 연동이 완료되었습니다.')));
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF111827),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 0,
+                ),
+                child: const Text('장바구니 전체 담기 및 결제', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
               ),
             ),
           ],

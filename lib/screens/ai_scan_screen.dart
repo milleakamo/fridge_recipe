@@ -74,6 +74,7 @@ class _AIScanScreenState extends State<AIScanScreen> {
                 addedDate: DateTime.now(),
                 expiryDate: DateTime.now().add(Duration(days: (item['expiry_days'] ?? 7).toInt())),
                 originalPrice: (item['price'] ?? 0.0).toDouble(),
+                isFood: item['is_food'] ?? true, // 추가됨
               );
             }).toList();
           }
@@ -400,8 +401,7 @@ class _AIScanScreenState extends State<AIScanScreen> {
                 itemCount: _scannedItems.length,
                 itemBuilder: (context, index) {
                   final item = _scannedItems[index];
-                  // API response now uses is_edible, mapped here as a heuristic or check
-                  final isFood = !item.name.contains('봉투') && !item.name.contains('세제');
+                  final isFood = item.isFood;
                   
                   return Container(
                     margin: const EdgeInsets.only(bottom: 12),
@@ -439,7 +439,9 @@ class _AIScanScreenState extends State<AIScanScreen> {
                       ),
                       trailing: Checkbox(
                         value: isFood,
-                        onChanged: (val) {},
+                        onChanged: (val) {
+                          // Manually toggle if needed
+                        },
                         activeColor: const Color(0xFF0047FF),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                       ),
