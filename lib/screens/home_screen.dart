@@ -273,7 +273,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 color: Colors.blue.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: const Text('v1.3.0 Stable (AI Vision + Market Sync)', 
+              child: const Text('v1.1.4 Beta (AI Vision + Receipt ROI)', 
                 style: TextStyle(color: Colors.blue, fontSize: 10, fontWeight: FontWeight.bold)),
             ),
           ],
@@ -486,15 +486,40 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             color: Colors.orangeAccent,
             onTap: () async {
               _toggleMenu();
-              final List<Ingredient>? newItems = await Navigator.push(
+              final result = await Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const AIScanScreen()),
               );
-              if (newItems != null && newItems.isNotEmpty) {
-                for (var item in newItems) {
-                  _ingredientBox.add(item);
+              
+              if (result != null) {
+                List<Ingredient> itemsToAdd = [];
+                bool goToRecipe = false;
+
+                if (result is Map) {
+                  itemsToAdd = result['items'] as List<Ingredient>;
+                  goToRecipe = result['goToRecipe'] ?? false;
+                } else if (result is List<Ingredient>) {
+                  itemsToAdd = result;
                 }
-                setState(() {});
+
+                if (itemsToAdd.isNotEmpty) {
+                  for (var item in itemsToAdd) {
+                    _ingredientBox.add(item);
+                  }
+                  setState(() {});
+                  
+                  if (goToRecipe) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => RecipeListScreen(
+                          ingredients: _ingredientBox.values.toList(),
+                          apiKey: widget.apiKey,
+                        ),
+                      ),
+                    );
+                  }
+                }
               }
             },
             index: 2,

@@ -31,7 +31,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const { image, type } = req.body;
+  const { image, type, ignore_non_food } = req.body;
   if (!image) {
     return res.status(400).json({ error: 'No image data provided' });
   }
@@ -46,7 +46,7 @@ export default async function handler(req, res) {
     
     let prompt = "";
     if (type === 'receipt') {
-      prompt = `Analyze this receipt image and extract ONLY food/edible items in JSON format.
+      prompt = `Analyze this receipt image and extract ${ignore_non_food ? 'ONLY' : ''} food/edible items in JSON format.
       
       Gajae Filter Logic:
       - INCLUDE: Agricultural products, seafood, livestock, processed foods, beverages, dairy, etc.

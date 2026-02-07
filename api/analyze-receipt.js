@@ -46,7 +46,7 @@ export default async function handler(req, res) {
     
     const prompt = `Analyze the receipt image and extract items in a structured JSON format. 
     
-    GAJAE FILTER RULE: 
+    GAJAE ROI FILTER RULE (Toss Style): 
     - You MUST identify and separate food/edible items from non-food items.
     - Food items: Fruits, vegetables, meats, dairy, snacks, drinks, seasonings, etc.
     - Non-food items (TO BE FILTERED): Trash bags, detergents, paper towels, batteries, soap, shampoo, clothing, delivery fees, service charges, tobacco, etc.
@@ -65,14 +65,15 @@ export default async function handler(req, res) {
           "category": "Meat|Dairy|Vegetable|Fruit|Seafood|Frozen|Processed|Beverage|Condiment|Grain",
           "is_food": true,
           "is_edible": true,
-          "saving_tip": "e.g., '아삭할 때 샐러드로 드세요'"
+          "saving_tip": "e.g., '냉동 보관하면 2주 더 먹을 수 있어요!'"
         }
       ]
     }
     1. Only include items with is_food: true in the "items" list.
-    2. Increment "non_food_items_count" for each non-food item found.
-    3. Calculate "total_estimated_savings" based on market trends (estimate 5-10% of total if not clear).
-    4. Ignore non-item entries (points, changes, taxes).`;
+    2. Count EACH non-food item entry (like trash bags) and set "non_food_items_count".
+    3. Calculate "total_estimated_savings" based on market trends (estimate 10% of total food cost as potential waste prevention value).
+    4. Ignore non-item entries (points, changes, taxes).
+    5. 'saving_tip' should be a friendly, practical advice for the user to save money or keep food fresh.`;
 
     const response = await axios.post(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,

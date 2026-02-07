@@ -206,13 +206,13 @@ class _AIScanScreenState extends State<AIScanScreen> {
               style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
               child: AnimatedTextKit(
                 animatedTexts: [
-                  TyperAnimatedText('영수증에서 재료를 찾고 있어요...'),
-                  TyperAnimatedText('이 재료들로 만들 수 있는 레시피가 5개나 있어요!'),
-                  TyperAnimatedText('식비 2,400원 절약 요소를 발견했어요! 🦞'),
-                  TyperAnimatedText('분석 완료! 곧 냉장고에 넣어드릴게요. 🦞'),
+                  TyperAnimatedText('Scanning: 영수증 가이드 라인 스캔 중...', speed: const Duration(milliseconds: 80)),
+                  TyperAnimatedText('Analyzing: 영수증에서 재료를 읽어내는 중...', speed: const Duration(milliseconds: 80)),
+                  TyperAnimatedText('Optimization: 식비 2,400원 절약 요소를 발견했어요! 🦞', speed: const Duration(milliseconds: 80)),
+                  TyperAnimatedText('완료! 곧 냉장고 파먹기를 시작합니다. 🦞', speed: const Duration(milliseconds: 80)),
                 ],
                 totalRepeatCount: 1,
-                pause: const Duration(milliseconds: 500),
+                pause: const Duration(milliseconds: 1000),
               ),
             ),
           ],
@@ -389,7 +389,7 @@ class _AIScanScreenState extends State<AIScanScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                   const Text(
-                    'AI 영수증 분석 완료',
+                    '와우! 분석이 끝났어요',
                     style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
                   Text(
@@ -402,8 +402,8 @@ class _AIScanScreenState extends State<AIScanScreen> {
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
-                    'Gajae Filter: $_nonFoodCount개의 비식품이 자동 제외되었습니다.',
-                    style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    '불필요한 항목(종량제 봉투 등) $_nonFoodCount개를 자동으로 제외해 관리 시간을 단축했습니다. 🦞',
+                    style: const TextStyle(color: Colors.blueGrey, fontSize: 13, fontWeight: FontWeight.w500),
                   ),
                 ),
             const SizedBox(height: 16),
@@ -481,9 +481,12 @@ class _AIScanScreenState extends State<AIScanScreen> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      // Filter out non-food items before popping
                       final foodOnly = _scannedItems.where((i) => i.isFood).toList();
-                      Navigator.pop(context, foodOnly);
+                      // Close and signal to home screen to add items and then go to recipe screen
+                      Navigator.pop(context, {
+                        'items': foodOnly,
+                        'goToRecipe': true
+                      });
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF0047FF),
@@ -492,7 +495,7 @@ class _AIScanScreenState extends State<AIScanScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     ),
-                    child: const Text('내 냉장고에 넣기', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                    child: const Text('이 재료로 레시피 추천받기', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],
