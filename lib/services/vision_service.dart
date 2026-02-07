@@ -16,6 +16,8 @@ class VisionService {
           'options': {
             'identify_freshness': true,
             'estimate_quantity': true,
+            'waste_prediction': true,
+            'visual_quality_score': true
           }
         }),
       );

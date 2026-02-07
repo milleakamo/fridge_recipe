@@ -10,7 +10,9 @@ class DietService {
       body: jsonEncode({
         'ingredients': ingredients.map((i) => i.toJson()).toList(),
         'mode': 'health_focus',
-        'health_profile': 'high_protein'
+        'health_profile': 'high_protein',
+        'ai_recommendation_engine': 'v2_ultra',
+        'calorie_target': 2000
       }),
     );
 
