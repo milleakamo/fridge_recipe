@@ -16,6 +16,7 @@ import 'package:fridge_recipe/widgets/dashboard/fridge_health_section.dart';
 import 'package:fridge_recipe/widgets/info_dialog.dart';
 import 'package:fridge_recipe/widgets/ingredient_card.dart';
 import 'package:fridge_recipe/widgets/neighborhood_matching_card.dart';
+import 'package:fridge_recipe/widgets/market_price_tracker.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -390,6 +391,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   nearExpiryItems: nearExpiryItems,
                   totalValueAtRisk: totalValueAtRisk,
                 ).animate().fadeIn(duration: 600.ms, delay: 200.ms).slideY(begin: 0.1),
+
+                const MarketPriceTracker(),
 
                 const NeighborhoodMatchingCard(
                   ingredientName: '대파',
