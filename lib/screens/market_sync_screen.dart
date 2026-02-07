@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:fridge_recipe/services/market_service.dart';
 
 class MarketSyncScreen extends StatefulWidget {
   const MarketSyncScreen({Key? key}) : super(key: key);
@@ -9,48 +10,41 @@ class MarketSyncScreen extends StatefulWidget {
 }
 
 class _MarketSyncScreenState extends State<MarketSyncScreen> {
+  final MarketService _marketService = MarketService();
   bool _isSyncing = false;
-  
-  final List<Map<String, dynamic>> _marketItems = [
-    {
-      'name': '유기농 대란 15구',
-      'currentPrice': 5800,
-      'optimalPrice': 4980,
-      'market': '쿠팡',
-      'discount': '14%',
-      'category': '신선식품'
-    },
-    {
-      'name': '서울우유 1L',
-      'currentPrice': 3100,
-      'optimalPrice': 2850,
-      'market': '이마트',
-      'discount': '8%',
-      'category': '유제품'
-    },
-    {
-      'name': '국산 흙대파',
-      'currentPrice': 3500,
-      'optimalPrice': 2100,
-      'market': '마켓컬리',
-      'discount': '40%',
-      'category': '채소'
-    },
-  ];
+  List<Map<String, dynamic>> _marketItems = [];
+  bool _isLoading = true;
 
-  void _startSync() {
+  @override
+  void initState() {
+    super.initState();
+    _fetchRealMarketData();
+  }
+
+  Future<void> _fetchRealMarketData() async {
+    setState(() => _isLoading = true);
+    // getOptimalShoppingList는 현재 정적 데이터를 반환하지만, 실제 서비스에서는 사용자 냉장고 기반 API를 호출함
+    final items = await _marketService.getOptimalShoppingList([]);
+    if (mounted) {
+      setState(() {
+        _marketItems = items;
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _startSync() async {
     setState(() => _isSyncing = true);
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() => _isSyncing = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('실시간 시장 가격 동기화 완료! 최저가 데이터가 갱신되었습니다.'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    });
+    await _fetchRealMarketData();
+    if (mounted) {
+      setState(() => _isSyncing = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('실시간 시장 가격 동기화 완료! 최저가 데이터가 갱신되었습니다.'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
   }
 
   @override
@@ -68,30 +62,32 @@ class _MarketSyncScreenState extends State<MarketSyncScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSyncStatusHeader(),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(20, 24, 20, 12),
-              child: Text('최적 구매 제안', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+      body: _isLoading 
+        ? const Center(child: CircularProgressIndicator())
+        : SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSyncStatusHeader(),
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(20, 24, 20, 12),
+                  child: Text('최적 구매 제안', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                ),
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _marketItems.length,
+                  itemBuilder: (context, index) {
+                    final item = _marketItems[index];
+                    return _buildMarketItemCard(item);
+                  },
+                ),
+                const SizedBox(height: 32),
+                _buildAutoPurchaseCard(),
+                const SizedBox(height: 100),
+              ],
             ),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _marketItems.length,
-              itemBuilder: (context, index) {
-                final item = _marketItems[index];
-                return _buildMarketItemCard(item);
-              },
-            ),
-            const SizedBox(height: 32),
-            _buildAutoPurchaseCard(),
-            const SizedBox(height: 100),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -124,46 +120,53 @@ class _MarketSyncScreenState extends State<MarketSyncScreen> {
   }
 
   Widget _buildMarketItemCard(Map<String, dynamic> item) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(color: const Color(0xFFF3F4F6), borderRadius: BorderRadius.circular(12)),
-            child: const Icon(Icons.shopping_bag, color: Colors.blueGrey),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return InkWell(
+      onTap: () {
+        _marketService.launchMarketLink(item['link']);
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(color: const Color(0xFFF3F4F6), borderRadius: BorderRadius.circular(12)),
+              child: const Icon(Icons.shopping_bag, color: Colors.blueGrey),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(item['name'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                  Text('${item['market']} · ${item['reason']}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(item['name'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                Text('${item['market']} · ${item['category']}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                Text('₩${item['price']}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: Colors.blueAccent)),
+                if (item['isLowest'])
+                  Container(
+                    margin: const EdgeInsets.only(top: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(color: Colors.red.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
+                    child: const Text('최저가', style: TextStyle(color: Colors.red, fontSize: 10, fontWeight: FontWeight.bold)),
+                  ),
               ],
             ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text('₩${item['optimalPrice']}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: Colors.blueAccent)),
-              Text('₩${item['currentPrice']}', style: const TextStyle(decoration: TextDecoration.lineThrough, color: Colors.grey, fontSize: 12)),
-              Container(
-                margin: const EdgeInsets.only(top: 4),
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(color: Colors.red.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
-                child: Text('-${item['discount']}', style: const TextStyle(color: Colors.red, fontSize: 10, fontWeight: FontWeight.bold)),
-              ),
-            ],
-          ),
-        ],
+            const SizedBox(width: 8),
+            const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+          ],
+        ),
       ),
     ).animate().fadeIn(duration: 400.ms).slideX(begin: 0.1);
   }
