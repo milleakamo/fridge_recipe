@@ -15,7 +15,6 @@ import 'package:fridge_recipe/services/market_service.dart';
 import 'package:fridge_recipe/widgets/dashboard/fridge_health_section.dart';
 import 'package:fridge_recipe/widgets/info_dialog.dart';
 import 'package:fridge_recipe/widgets/ingredient_card.dart';
-import 'package:fridge_recipe/widgets/neighborhood_matching_card.dart';
 import 'package:fridge_recipe/widgets/market_price_tracker.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
@@ -274,7 +273,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 color: Colors.blue.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: const Text('v1.2.6 Stable (Real-time Market Sync)', 
+              child: const Text('v1.3.0 Stable (AI Vision + Market Sync)', 
                 style: TextStyle(color: Colors.blue, fontSize: 10, fontWeight: FontWeight.bold)),
             ),
           ],

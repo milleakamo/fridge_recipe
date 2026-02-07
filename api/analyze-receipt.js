@@ -45,36 +45,34 @@ export default async function handler(req, res) {
     const base64Data = image.split(',')[1] || image;
     
     const prompt = `Analyze the receipt image and extract items in a structured JSON format. 
+    
+    GAJAE FILTER RULE: 
+    - You MUST identify and separate food/edible items from non-food items.
+    - Food items: Fruits, vegetables, meats, dairy, snacks, drinks, seasonings, etc.
+    - Non-food items (TO BE FILTERED): Trash bags, detergents, paper towels, batteries, soap, shampoo, clothing, delivery fees, service charges, tobacco, etc.
+    
     The output must strictly follow this JSON schema: 
     {
       "store": "Store Name",
       "date": "YYYY-MM-DD",
+      "total_estimated_savings": 2400,
+      "non_food_items_count": 0,
       "items": [
         {
-          "name": "Refined Item Name (e.g., 'Chicken Breast' instead of 'KR_CHICK_BR')",
+          "name": "Standardized Item Name",
           "price": 12000,
           "quantity": 1,
-          "category": "One of: Meat, Dairy, Vegetable, Fruit, Seafood, Frozen, Processed, Beverage, Condiment, Grain, Other",
-          "expiry_days": 0,
+          "category": "Meat|Dairy|Vegetable|Fruit|Seafood|Frozen|Processed|Beverage|Condiment|Grain",
           "is_food": true,
           "is_edible": true,
-          "brand": "Brand name if available",
-          "unit_price": 12000
+          "saving_tip": "e.g., '아삭할 때 샐러드로 드세요'"
         }
-      ],
-      "total_price": 54000,
-      "estimated_savings": 2400
+      ]
     }
-    Identify all items on the receipt.
-    For each item:
-    1. Determine if it is a food item (edible, ingredients, snacks, etc.). Set "is_food": true and "is_edible": true for these.
-    2. For non-food items (detergents, paper towels, trash bags, electronics, soap, shampoo, battery, plastic bags, etc.), set "is_food": false, "is_edible": false, and "category": "Other".
-    3. Refine the item name to be human-readable and standard.
-    4. Provide the price and quantity. If quantity > 1, unit_price should be price / quantity.
-    5. Ensure "price" matches "unit_price * quantity" as a validation step.
-    6. If is_food is true, set the category and estimate expiry_days (Meat: 3, Dairy: 10, Vegetable: 7, etc.).
-    7. Calculate "estimated_savings" (total) based on common discounts or bulk buy advantages (~5-10% of total if not specified).
-    8. Ignore point balances, payment methods, and non-item entries.`;
+    1. Only include items with is_food: true in the "items" list.
+    2. Increment "non_food_items_count" for each non-food item found.
+    3. Calculate "total_estimated_savings" based on market trends (estimate 5-10% of total if not clear).
+    4. Ignore non-item entries (points, changes, taxes).`;
 
     const response = await axios.post(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,

@@ -23,6 +23,7 @@ class _AIScanScreenState extends State<AIScanScreen> {
   bool _showResults = false;
   List<Ingredient> _scannedItems = [];
   double _estimatedSavings = 0;
+  int _nonFoodCount = 0;
   final ImagePicker _picker = ImagePicker();
   
   final List<Rect> _detectedBoxes = [
@@ -66,7 +67,9 @@ class _AIScanScreenState extends State<AIScanScreen> {
         setState(() {
           _isScanning = false;
           _showResults = true;
-          _estimatedSavings = (result['estimated_savings'] ?? 0).toDouble();
+          // Use 'estimated_savings' or 'total_estimated_savings' from API
+          _estimatedSavings = (result['estimated_savings'] ?? result['total_estimated_savings'] ?? 0).toDouble();
+          _nonFoodCount = (result['non_food_items_count'] ?? result['non_food_count_excluded'] ?? 0).toInt();
           
           if (result['items'] != null) {
             _scannedItems = (result['items'] as List).map((item) {
@@ -76,7 +79,7 @@ class _AIScanScreenState extends State<AIScanScreen> {
                 addedDate: DateTime.now(),
                 expiryDate: DateTime.now().add(Duration(days: (item['expiry_days'] ?? 7).toInt())),
                 originalPrice: (item['price'] ?? 0.0).toDouble(),
-                isFood: item['is_food'] ?? item['is_edible'] ?? true, 
+                isFood: item['is_food'] == true || item['is_edible'] == true, 
               );
             }).toList();
           }
@@ -385,16 +388,24 @@ class _AIScanScreenState extends State<AIScanScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  '인식 결과',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  const Text(
+                    'AI 영수증 분석 완료',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    '${_scannedItems.where((i) => i.isFood).length}개 식재료 발견',
+                    style: const TextStyle(color: Color(0xFF0047FF), fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              if (_nonFoodCount > 0)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    'Gajae Filter: $_nonFoodCount개의 비식품이 자동 제외되었습니다.',
+                    style: const TextStyle(color: Colors.grey, fontSize: 12),
+                  ),
                 ),
-                Text(
-                  '${_scannedItems.length}개 분석됨',
-                  style: const TextStyle(color: Color(0xFF0047FF), fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
             const SizedBox(height: 16),
             _buildValueCard(totalValue),
             const SizedBox(height: 20),
@@ -470,7 +481,9 @@ class _AIScanScreenState extends State<AIScanScreen> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.pop(context, _scannedItems);
+                      // Filter out non-food items before popping
+                      final foodOnly = _scannedItems.where((i) => i.isFood).toList();
+                      Navigator.pop(context, foodOnly);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF0047FF),
