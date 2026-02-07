@@ -13,6 +13,10 @@ class VisionService {
         body: jsonEncode({
           'image': base64Image,
           'type': 'fridge',
+          'options': {
+            'identify_freshness': true,
+            'estimate_quantity': true,
+          }
         }),
       );
 

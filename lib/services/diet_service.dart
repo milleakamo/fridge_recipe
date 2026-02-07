@@ -7,7 +7,11 @@ class DietService {
     final response = await http.post(
       Uri.parse('/api/generate-diet'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'ingredients': ingredients.map((i) => i.toJson()).toList()}),
+      body: jsonEncode({
+        'ingredients': ingredients.map((i) => i.toJson()).toList(),
+        'mode': 'health_focus',
+        'health_profile': 'high_protein'
+      }),
     );
 
     if (response.statusCode == 200) {

@@ -22,6 +22,7 @@ class _AIScanScreenState extends State<AIScanScreen> {
   bool _isScanning = false;
   bool _showResults = false;
   List<Ingredient> _scannedItems = [];
+  double _estimatedSavings = 0;
   final ImagePicker _picker = ImagePicker();
   
   final List<Rect> _detectedBoxes = [
@@ -65,6 +66,7 @@ class _AIScanScreenState extends State<AIScanScreen> {
         setState(() {
           _isScanning = false;
           _showResults = true;
+          _estimatedSavings = (result['estimated_savings'] ?? 0).toDouble();
           
           if (result['items'] != null) {
             _scannedItems = (result['items'] as List).map((item) {
@@ -74,7 +76,7 @@ class _AIScanScreenState extends State<AIScanScreen> {
                 addedDate: DateTime.now(),
                 expiryDate: DateTime.now().add(Duration(days: (item['expiry_days'] ?? 7).toInt())),
                 originalPrice: (item['price'] ?? 0.0).toDouble(),
-                isFood: item['is_food'] ?? true, // 추가됨
+                isFood: item['is_food'] ?? item['is_edible'] ?? true, 
               );
             }).toList();
           }
@@ -494,6 +496,9 @@ class _AIScanScreenState extends State<AIScanScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFFF2F4F7),
         borderRadius: BorderRadius.circular(20),
+        border: _estimatedSavings > 0 
+            ? Border.all(color: const Color(0xFF0047FF).withOpacity(0.3), width: 1)
+            : null,
       ),
       child: Row(
         children: [
@@ -503,20 +508,25 @@ class _AIScanScreenState extends State<AIScanScreen> {
               color: Colors.white,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.account_balance_wallet, color: Color(0xFF0047FF)),
+            child: Icon(
+              _estimatedSavings > 0 ? Icons.savings : Icons.account_balance_wallet, 
+              color: const Color(0xFF0047FF)
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  '오늘 담은 가치',
-                  style: TextStyle(fontSize: 13, color: Colors.blueGrey),
+                Text(
+                  _estimatedSavings > 0 ? '오늘의 절약 포인트' : '오늘 담은 가치',
+                  style: const TextStyle(fontSize: 13, color: Colors.blueGrey, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '₩${totalValue.toStringAsFixed(0)}의 식재료를 담았습니다!',
+                  _estimatedSavings > 0 
+                      ? '이번 영수증에서 ₩${_estimatedSavings.toStringAsFixed(0)}를 아꼈어요! 🦞'
+                      : '₩${totalValue.toStringAsFixed(0)}의 식재료를 담았습니다!',
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
                 ),
               ],
