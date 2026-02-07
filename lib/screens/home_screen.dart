@@ -396,12 +396,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
                 const MarketPriceTracker(),
 
-                const NeighborhoodMatchingCard(
-                  ingredientName: '대파',
-                  neighborName: '방배동 가재',
-                  distance: '300m',
-                ).animate().fadeIn(duration: 600.ms, delay: 300.ms).slideY(begin: 0.1),
-
                 const SizedBox(height: 32),
                 
                 ConsumptionTimeline(
