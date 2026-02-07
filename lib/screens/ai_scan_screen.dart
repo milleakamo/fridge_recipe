@@ -32,6 +32,15 @@ class _AIScanScreenState extends State<AIScanScreen> {
     const Rect.fromLTWH(100, 450, 120, 120),
   ];
 
+  final List<String> _loadingMessages = [
+    "영수증에서 식재료 정보를 읽어오고 있어요...",
+    "유통기한 데이터를 대조하고 있습니다.",
+    "잠시만요! 유통기한 임박 식재료와 겹치는 항목이 있는지 확인 중이에요.",
+    "오늘 구매로 이번 주 식비를 약 15% 절약할 수 있는 레시피를 찾았습니다!",
+  ];
+  int _loadingMessageIndex = 0;
+  Timer? _loadingTimer;
+
   @override
   void initState() {
     super.initState();

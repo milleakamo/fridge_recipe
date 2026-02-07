@@ -44,39 +44,38 @@ export default async function handler(req, res) {
   try {
     const base64Data = image.split(',')[1] || image;
     
-    const prompt = `Analyze the receipt image and extract items in a structured JSON format. 
-    
-    GAJAE ROI FILTER RULE (Toss Style): 
-    - You MUST identify and separate food/edible items from non-food items.
-    - Food items: Fruits, vegetables, meats, dairy, snacks, drinks, seasonings, etc.
-    - Non-food items (TO BE FILTERED): Trash bags, detergents, paper towels, batteries, soap, shampoo, clothing, delivery fees, service charges, tobacco, etc.
-    
+    const prompt = `당신은 토스(Toss) 스타일의 직관적이고 효율적인 UX를 지향하는 가재컴퍼니의 영수증 분석 엔진입니다. 
+    영수증 이미지에서 식재료 정보를 정밀하게 추출하고, 사용자의 ROI를 극대화하는 JSON 데이터를 생성하세요.
+
+    GAJAE ROI FILTER RULE:
+    1. 식재료(식품)만 추출: 과일, 채소, 육류, 유제품, 가공식품, 음료, 조미료 등 먹을 수 있는 것만 포함하세요.
+    2. 비식품 엄격 제외: 종량제 봉투, 세제, 키친타월, 건전지, 비누, 샴푸, 의류, 배달비, 서비스 요금, 담배 등은 절대 'items'에 넣지 마세요.
+    3. 비식품 카운트: 제외된 비식품 항목의 총 개수를 'non_food_items_count'에 기록하세요.
+    4. 명칭 정제: '무농약 콩나물 300g' -> '콩나물'과 같이 표준 명칭으로 정제하세요.
+
     The output must strictly follow this JSON schema: 
     {
-      "store": "Store Name",
+      "store": "상점 이름",
       "date": "YYYY-MM-DD",
       "total_estimated_savings": 2400,
       "non_food_items_count": 0,
       "items": [
         {
-          "name": "Standardized Item Name",
+          "name": "정제된 품목명",
           "price": 12000,
           "quantity": 1,
           "category": "Meat|Dairy|Vegetable|Fruit|Seafood|Frozen|Processed|Beverage|Condiment|Grain",
           "is_food": true,
           "is_edible": true,
-          "saving_tip": "e.g., '냉동 보관하면 2주 더 먹을 수 있어요!'"
+          "saving_tip": "이 재료를 활용한 절약 팁 (예: '냉동 보관 시 2주 더 신선해요!')"
         }
       ]
     }
-    1. Only include items with is_food: true in the "items" list.
-    2. Count EACH non-food item entry (like trash bags) and set "non_food_items_count".
-    3. Calculate "total_estimated_savings" based on market trends (estimate 10% of total food cost as potential waste prevention value).
-    4. Ignore non-item entries (points, changes, taxes).
-    5. 'saving_tip' should be a friendly, practical advice for the user to save money or keep food fresh.`;
+    - 'total_estimated_savings'는 전체 식품 구매액의 약 15%를 식재료 관리 효율화로 아낄 수 있는 금액으로 추정하여 계산하세요.
+    - 'saving_tip'은 사용자가 즉각적인 이득을 느낄 수 있도록 친절하고 구체적으로 작성하세요.`;
 
     const response = await axios.post(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
       {
         contents: [{
           parts: [
