@@ -3,6 +3,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'dart:async';
 import 'dart:math';
 
+import 'package:fridge_recipe/services/market_service.dart';
+
 class MarketPriceTracker extends StatefulWidget {
   const MarketPriceTracker({Key? key}) : super(key: key);
 
@@ -11,35 +13,26 @@ class MarketPriceTracker extends StatefulWidget {
 }
 
 class _MarketPriceTrackerState extends State<MarketPriceTracker> {
-  final List<Map<String, dynamic>> _marketData = [
-    {'name': '대파 (1단)', 'price': 3200, 'change': -150, 'trend': 'down'},
-    {'name': '양파 (1kg)', 'price': 2800, 'change': 200, 'trend': 'up'},
-    {'name': '계란 (30구)', 'price': 6500, 'change': 0, 'trend': 'stable'},
-    {'name': '우유 (1L)', 'price': 2950, 'change': 50, 'trend': 'up'},
-  ];
-
+  final MarketService _marketService = MarketService();
+  List<Map<String, dynamic>> _marketData = [];
+  bool _isLoading = true;
   late Timer _timer;
-  final Random _random = Random();
 
   @override
   void initState() {
     super.initState();
-    _startPriceSimulation();
+    _fetchRealData();
+    _timer = Timer.periodic(const Duration(minutes: 10), (timer) => _fetchRealData());
   }
 
-  void _startPriceSimulation() {
-    _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      if (mounted) {
-        setState(() {
-          for (var item in _marketData) {
-            final volatility = _random.nextInt(40) - 20;
-            item['price'] += volatility;
-            item['change'] = volatility;
-            item['trend'] = volatility > 0 ? 'up' : (volatility < 0 ? 'down' : 'stable');
-          }
-        });
-      }
-    });
+  Future<void> _fetchRealData() async {
+    final data = await _marketService.getRealtimeMarketPrices();
+    if (mounted) {
+      setState(() {
+        _marketData = data;
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -86,10 +79,12 @@ class _MarketPriceTrackerState extends State<MarketPriceTracker> {
           const SizedBox(height: 16),
           SizedBox(
             height: 80,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _marketData.length,
-              itemBuilder: (context, index) {
+            child: _isLoading 
+              ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
+              : ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _marketData.length,
+                  itemBuilder: (context, index) {
                 final item = _marketData[index];
                 final isUp = item['trend'] == 'up';
                 final isDown = item['trend'] == 'down';
