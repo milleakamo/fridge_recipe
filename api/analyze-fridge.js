@@ -46,19 +46,27 @@ export default async function handler(req, res) {
     
     let prompt = "";
     if (type === 'receipt') {
-      prompt = `Analyze receipt image and extract items in JSON format.
-      JSON structure: {
-        store: string,
-        date: string (YYYY-MM-DD),
-        items: [{
-          name: string,
-          price: number,
-          quantity: number,
-          category: string (One of: Meat, Dairy, Vegetable, Fruit, Seafood, Frozen, Processed, Beverage, Condiment, Grain),
-          is_edible: boolean (true for food items, false for trash bags, detergent, etc.),
-          expiry_days: number (estimated shelf life from purchase date)
+      prompt = `Analyze this receipt image and extract ONLY food/edible items in JSON format.
+      
+      Gajae Filter Logic:
+      - INCLUDE: Agricultural products, seafood, livestock, processed foods, beverages, dairy, etc.
+      - EXCLUDE: Trash bags, dish soap, batteries, clothing, service fees (delivery), tobacco, household items.
+      - Contextual Check: 'Onion rings' is food, 'Onion net' is non-food.
+
+      Return JSON format:
+      {
+        "store": "string",
+        "date": "string (YYYY-MM-DD)",
+        "items": [{
+          "name": "string",
+          "price": number,
+          "quantity": number,
+          "category": "string (Meat|Dairy|Vegetable|Fruit|Seafood|Frozen|Processed|Beverage|Condiment|Grain)",
+          "confidence": float (0.0 to 1.0),
+          "is_edible": true
         }]
-      }`;
+      }
+      Only return items where is_edible would be true based on the criteria above.`;
     } else {
       prompt = `Analyze fridge image and extract items in JSON format.
       JSON structure: {
