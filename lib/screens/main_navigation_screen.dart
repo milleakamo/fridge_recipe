@@ -3,6 +3,7 @@ import 'package:fridge_recipe/screens/home_screen.dart';
 import 'package:fridge_recipe/screens/diet_screen.dart';
 import 'package:fridge_recipe/screens/premium_screen.dart';
 import 'package:fridge_recipe/screens/market_sync_screen.dart';
+import 'package:fridge_recipe/screens/neighborhood_trade_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   final String apiKey;
@@ -22,6 +23,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     _screens = [
       HomeScreen(apiKey: widget.apiKey),
       const DietScreen(),
+      const NeighborhoodTradeScreen(),
       const MarketSyncScreen(),
       const PremiumScreen(),
     ];
@@ -57,6 +59,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           items: const [
             BottomNavigationBarItem(icon: Icon(Icons.kitchen), label: '냉장고'),
             BottomNavigationBarItem(icon: Icon(Icons.auto_awesome), label: 'AI 식단'),
+            BottomNavigationBarItem(icon: Icon(Icons.storefront), label: '동네나눔'),
             BottomNavigationBarItem(icon: Icon(Icons.sync_alt), label: '시장동기화'),
             BottomNavigationBarItem(icon: Icon(Icons.stars), label: '프리미엄'),
           ],
