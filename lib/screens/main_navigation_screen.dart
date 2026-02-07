@@ -3,7 +3,6 @@ import 'package:fridge_recipe/screens/home_screen.dart';
 import 'package:fridge_recipe/screens/diet_screen.dart';
 import 'package:fridge_recipe/screens/premium_screen.dart';
 import 'package:fridge_recipe/screens/market_sync_screen.dart';
-import 'package:fridge_recipe/screens/neighborhood_trade_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   final String apiKey;

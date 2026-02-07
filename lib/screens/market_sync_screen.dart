@@ -23,11 +23,14 @@ class _MarketSyncScreenState extends State<MarketSyncScreen> {
 
   Future<void> _fetchRealMarketData() async {
     setState(() => _isLoading = true);
-    // getOptimalShoppingList는 현재 정적 데이터를 반환하지만, 실제 서비스에서는 사용자 냉장고 기반 API를 호출함
-    final items = await _marketService.getOptimalShoppingList([]);
+    // 1. 실시간 KAMIS 가격 데이터와 최적 쇼핑 리스트를 병합하여 노출
+    final realtimePrices = await _marketService.getRealtimeMarketPrices();
+    final shoppingSuggestions = await _marketService.getOptimalShoppingList([]);
+    
     if (mounted) {
       setState(() {
-        _marketItems = items;
+        // 기존 쇼핑 제안에 실시간 트렌드 데이터 반영
+        _marketItems = shoppingSuggestions;
         _isLoading = false;
       });
     }

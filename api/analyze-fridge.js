@@ -52,21 +52,25 @@ export default async function handler(req, res) {
       - INCLUDE: Agricultural products, seafood, livestock, processed foods, beverages, dairy, etc.
       - EXCLUDE: Trash bags, dish soap, batteries, clothing, service fees (delivery), tobacco, household items.
       - Contextual Check: 'Onion rings' is food, 'Onion net' is non-food.
+      - ROI Estimation: For each food item, estimate the "savings potential" if used before expiry.
 
       Return JSON format:
       {
         "store": "string",
         "date": "string (YYYY-MM-DD)",
+        "total_estimated_savings": number,
+        "non_food_count_excluded": number,
         "items": [{
           "name": "string",
           "price": number,
           "quantity": number,
           "category": "string (Meat|Dairy|Vegetable|Fruit|Seafood|Frozen|Processed|Beverage|Condiment|Grain)",
           "confidence": float (0.0 to 1.0),
-          "is_edible": true
+          "is_edible": true,
+          "saving_tip": "string (e.g., 'Save 2,400 KRW by using this in a stew')"
         }]
       }
-      Only return items where is_edible would be true based on the criteria above.`;
+      Only return items where is_edible would be true based on the criteria above. Include a count of non-food items excluded in "non_food_count_excluded".`;
     } else {
       prompt = `Analyze fridge image and extract items in JSON format.
       JSON structure: {
