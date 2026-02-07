@@ -44,14 +44,14 @@ export default async function handler(req, res) {
   try {
     const base64Data = image.split(',')[1] || image;
     
-    const prompt = `당신은 토스(Toss) 스타일의 직관적이고 효율적인 UX를 지향하는 가재컴퍼니의 영수증 분석 엔진입니다. 
-    영수증 이미지에서 식재료 정보를 정밀하게 추출하고, 사용자의 ROI를 극대화하는 JSON 데이터를 생성하세요.
+    const prompt = `당신은 가재컴퍼니의 냉장고 관리 앱 데이터 추출 엔진입니다.
+    제공된 영수증 이미지에서 다음 규칙에 따라 JSON 데이터를 추출하세요:
 
-    GAJAE ROI FILTER RULE:
-    1. 식재료(식품)만 추출: 과일, 채소, 육류, 유제품, 가공식품, 음료, 조미료 등 먹을 수 있는 것만 포함하세요.
-    2. 비식품 엄격 제외: 종량제 봉투, 세제, 키친타월, 건전지, 비누, 샴푸, 의류, 배달비, 서비스 요금, 담배 등은 절대 'items'에 넣지 마세요.
-    3. 비식품 카운트: 제외된 비식품 항목의 총 개수를 'non_food_items_count'에 기록하세요.
-    4. 명칭 정제: '무농약 콩나물 300g' -> '콩나물'과 같이 표준 명칭으로 정제하세요.
+    1. ROI 필터링 규칙 (Toss Style):
+       - Whitelist (포함): 농산물, 수산물, 축산물, 가공식품, 음료, 소스류, 유제품.
+       - Blacklist (제외): 주류, 담배, 종량제 봉투, 주방용품(수세미 등), 욕실용품, 문구류, 잡화.
+    2. 품목명 정제: 표준 식재료 명칭으로 정제하세요 (예: '무농약 콩나물 300g' -> '콩나물').
+    3. ROI 계산: 'total_estimated_savings'는 전체 식품 구매액의 약 15%를 식재료 관리 효율화로 아낄 수 있는 금액으로 추정하여 계산하세요.
 
     The output must strictly follow this JSON schema: 
     {
@@ -67,12 +67,13 @@ export default async function handler(req, res) {
           "category": "Meat|Dairy|Vegetable|Fruit|Seafood|Frozen|Processed|Beverage|Condiment|Grain",
           "is_food": true,
           "is_edible": true,
+          "expiry_days": 7,
           "saving_tip": "이 재료를 활용한 절약 팁 (예: '냉동 보관 시 2주 더 신선해요!')"
         }
       ]
     }
-    - 'total_estimated_savings'는 전체 식품 구매액의 약 15%를 식재료 관리 효율화로 아낄 수 있는 금액으로 추정하여 계산하세요.
-    - 'saving_tip'은 사용자가 즉각적인 이득을 느낄 수 있도록 친절하고 구체적으로 작성하세요.`;
+    - 'non_food_items_count'에는 제외된 비식품 항목의 총 개수를 기록하세요.
+    - 'expiry_days'는 식약처 데이터를 기반으로 추정된 보관 가능 일수(숫자)를 입력하세요.`;
 
     const response = await axios.post(
       `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`,

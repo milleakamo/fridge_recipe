@@ -57,6 +57,7 @@ class _AIScanScreenState extends State<AIScanScreen> {
 
   @override
   void dispose() {
+    _loadingTimer?.cancel();
     _controller?.dispose();
     super.dispose();
   }
@@ -65,12 +66,25 @@ class _AIScanScreenState extends State<AIScanScreen> {
     setState(() {
       _isScanning = true;
       _showResults = false;
+      _loadingMessageIndex = 0;
+    });
+
+    _loadingTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
+      if (mounted && _loadingMessageIndex < _loadingMessages.length - 1) {
+        setState(() {
+          _loadingMessageIndex++;
+        });
+      } else {
+        timer.cancel();
+      }
     });
 
     try {
       final result = isReceipt 
           ? await VisionService.analyzeReceipt(base64Image)
           : await VisionService.analyzeFridge(base64Image);
+
+      _loadingTimer?.cancel();
 
       if (mounted) {
         setState(() {
@@ -211,17 +225,23 @@ class _AIScanScreenState extends State<AIScanScreen> {
             ).animate(onPlay: (controller) => controller.repeat())
              .shimmer(duration: 2.seconds, color: const Color(0xFF0047FF).withOpacity(0.3)),
             const SizedBox(height: 40),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40),
+              child: Text(
+                _loadingMessages[_loadingMessageIndex],
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+              ).animate(key: ValueKey(_loadingMessageIndex)).fadeIn().slideY(begin: 0.1),
+            ),
+            const SizedBox(height: 20),
             DefaultTextStyle(
-              style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              style: const TextStyle(color: Colors.white70, fontSize: 14),
               child: AnimatedTextKit(
                 animatedTexts: [
-                  TyperAnimatedText('Scanning: 영수증 가이드 라인 스캔 중...', speed: const Duration(milliseconds: 80)),
-                  TyperAnimatedText('Analyzing: 영수증에서 재료를 읽어내는 중...', speed: const Duration(milliseconds: 80)),
-                  TyperAnimatedText('Optimization: 식비 2,400원 절약 요소를 발견했어요! 🦞', speed: const Duration(milliseconds: 80)),
-                  TyperAnimatedText('완료! 곧 냉장고 파먹기를 시작합니다. 🦞', speed: const Duration(milliseconds: 80)),
+                  TyperAnimatedText('거의 다 됐어요...', speed: const Duration(milliseconds: 80)),
+                  TyperAnimatedText('조금만 더 기다려주세요...', speed: const Duration(milliseconds: 80)),
                 ],
-                totalRepeatCount: 1,
-                pause: const Duration(milliseconds: 1000),
+                repeatForever: true,
               ),
             ),
           ],
