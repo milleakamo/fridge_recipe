@@ -226,7 +226,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         ],
                       ),
                       trailing: Text(currencyFormat.format(item['price']), style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF111827))),
-                      onTap: () {},
+                      onTap: () {
+                        _marketService.launchMarketLink(item['link']);
+                      },
                     ),
                   );
                 },
