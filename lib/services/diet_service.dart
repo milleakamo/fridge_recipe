@@ -22,4 +22,23 @@ class DietService {
       throw Exception('Failed to generate diet plan');
     }
   }
+
+  Future<Map<String, dynamic>> generate7DayDietPlan(List<Ingredient> ingredients) async {
+    final response = await http.post(
+      Uri.parse('/api/generate-diet'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'ingredients': ingredients.map((i) => i.toJson()).toList(),
+        'mode': 'zero_purchase',
+        'ai_recommendation_engine': 'v3_7day',
+        'include_shopping': true
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to generate 7-day diet plan');
+    }
+  }
 }
